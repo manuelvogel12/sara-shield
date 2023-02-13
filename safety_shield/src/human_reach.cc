@@ -64,7 +64,7 @@ void HumanReach::measurement(const std::vector<reach_lib::Point>& human_joint_po
     last_meas_timestep_ = time;
     //ROS_INFO_STREAM("Human Mocap measurement received. Timestamp of meas was " << last_meas_timestep);
   } catch (const std::exception &exc) {
-    spdlog::error("Exception in HumanReach::measurement: {}", exc.what());
+    //spdlog::error("Exception in HumanReach::measurement: {}", exc.what());
   }
 }
 
@@ -78,7 +78,7 @@ void HumanReach::humanReachabilityAnalysis(double t_command, double t_brake) {
     human_v_.update(0.0, t_reach, joint_pos_, joint_vel_);
     human_a_.update(0.0, t_reach, joint_pos_, joint_vel_);
   } catch (const std::exception &exc) {
-      spdlog::error("Exception in HumanReach::humanReachabilityAnalysis: {}", exc.what());
+      //spdlog::error("Exception in HumanReach::humanReachabilityAnalysis: {}", exc.what());
   }
 }
 

@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "spdlog/spdlog.h" // https://github.com/gabime/spdlog
+//#include "spdlog/spdlog.h" // https://github.com/gabime/spdlog
 
 #include "reach_lib.hpp"
 

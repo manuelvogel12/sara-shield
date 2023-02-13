@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "spdlog/spdlog.h" 
+//#include "spdlog/spdlog.h" 
 #include <yaml-cpp/yaml.h>
 #include "long_term_planner/long_term_planner.h"
 #include "reach_lib.hpp"

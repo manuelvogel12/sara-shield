@@ -19,7 +19,7 @@
 #include <exception>
 
 #include <Eigen/Dense>
-#include "spdlog/spdlog.h" 
+//#include "spdlog/spdlog.h" 
 
 #include "reach_lib.hpp"
 

@@ -2,6 +2,7 @@
 #include <vector>
 #include <chrono>
 #include <type_traits>
+#include <iostream>
 
 #include "reach_lib.hpp"
 
@@ -15,9 +16,9 @@
 int main () {
     bool activate_shield = true;
     double sample_time = 0.001; 
-    std::string trajectory_config_file = std::string("../safety_shield/config/trajectory_parameters_schunk.yaml");
-    std::string robot_config_file = std::string("../safety_shield/config/robot_parameters_schunk.yaml");
-    std::string mocap_config_file = std::string("../safety_shield/config/cmu_mocap_no_hand.yaml");
+    std::string trajectory_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml");
+    std::string robot_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml");
+    std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
     double init_x = 0.0;
     double init_y = 0.0;
     double init_z = 0.0;
@@ -47,7 +48,7 @@ int main () {
 
     //auto start_time = std::chrono::system_clock::now();
     //double t = std::chrono::duration<double>(std::chrono::system_clock::now()-start_time).count();
-    spdlog::info("Debug started.");
+    //spdlog::info("Debug started.");
     double t = 0.0;
     for (int ep=0; ep<1; ep++) {
       for (int i=0; i<10000; i++) {
@@ -60,9 +61,17 @@ int main () {
             shield.newLongTermTrajectory(qpos, qvel);
         }
         safety_shield::Motion next_motion = shield.step(t);
+        std::cout<< "Angles"<< std::endl;
+        std::vector<double> q = next_motion.getAngle();
+        for(double& angle: q)
+            std::cout << angle << std::endl;
+        std::cout<< "Velo"<< std::endl;
+        std::vector<double> v = next_motion.getVelocity();
+        for(double& velocity: v)
+            std::cout << velocity << std::endl;
       }
       shield.reset(true, init_x, init_y, init_z, init_roll, init_pitch, init_yaw, init_qpos, t);
     }
-    spdlog::info("Debug finished.");
+    //spdlog::info("Debug finished.");
     return 0;
 }

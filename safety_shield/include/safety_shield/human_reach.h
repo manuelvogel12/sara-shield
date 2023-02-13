@@ -21,7 +21,7 @@
 #include <exception>
 #include <assert.h>
 
-#include "spdlog/spdlog.h" 
+//#include "spdlog/spdlog.h" 
 
 #include "reach_lib.hpp"
 

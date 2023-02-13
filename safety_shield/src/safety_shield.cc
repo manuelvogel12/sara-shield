@@ -11,7 +11,7 @@ SafetyShield::SafetyShield():
     a_max_ltt_({0, 0, 0}),
     j_max_ltt_({0, 0, 0})
     {
-      spdlog::info("Safety shield created.");
+      std::cout<<"Safety shield created"<<std::endl;//spdlog::info("Safety shield created.");
     }
 
 SafetyShield::SafetyShield(bool activate_shield,
@@ -57,7 +57,7 @@ SafetyShield::SafetyShield(bool activate_shield,
   std::vector<double> q_min(nb_joints, -3.141);
   std::vector<double> q_max(nb_joints, -3.141);
   ltp_ = long_term_planner::LongTermPlanner(nb_joints, sample_time, q_min, q_max, v_max_allowed, a_max_path, j_max_path);
-  spdlog::info("Safety shield created.");
+  //spdlog::info("Safety shield created.");
 }
 
 SafetyShield::SafetyShield(bool activate_shield,
@@ -163,7 +163,7 @@ SafetyShield::SafetyShield(bool activate_shield,
     is_safe_ = !activate_shield_;
     computesPotentialTrajectory(is_safe_, prev_dq);
     next_motion_ = determineNextMotion(is_safe_);
-    spdlog::info("Safety shield created.");
+    //spdlog::info("Safety shield created.");
   }
 
 void SafetyShield::reset(bool activate_shield,
@@ -201,7 +201,7 @@ void SafetyShield::reset(bool activate_shield,
   long_term_trajectory_ = LongTermTraj(long_term_traj, sample_time_);
   computesPotentialTrajectory(is_safe_, prev_dq);
   next_motion_ = determineNextMotion(is_safe_);
-  spdlog::info("Safety shield resetted.");
+  //spdlog::info("Safety shield resetted.");
 }
 
 bool SafetyShield::planSafetyShield(double pos, double vel, double acc, double ve, double a_max, double j_max, Path &path) {
@@ -337,14 +337,14 @@ bool SafetyShield::planSafetyShield(double pos, double vel, double acc, double v
       j23 = 0;
     }
     if (t01 < 0 || t12 < 0 || t23 < 0) {
-      spdlog::debug("planSafetyShield calculated time negative. t01 = {}, t12 = {}, t23 = {}", t01, t12, t23);
+      //spdlog::debug("planSafetyShield calculated time negative. t01 = {}, t12 = {}, t23 = {}", t01, t12, t23);
       return false;
     }
     std::array<double,6> new_phases = { t01, t01+t12, t01+t12+t23, j01, j12, j23 };
     path.setPhases(new_phases);
     return true;
   } catch (const std::exception &exc) {
-    spdlog::error("Exception in SafetyShield::planSafetyShield: {}", exc.what());
+    //spdlog::error("Exception in SafetyShield::planSafetyShield: {}", exc.what());
     return false;
   }
 }
@@ -449,7 +449,7 @@ Motion SafetyShield::computesPotentialTrajectory(bool v, const std::vector<doubl
     goal_motion.setTime(potential_path_.getPhase(3));
     return goal_motion;
   } catch (const std::exception &exc) {
-    spdlog::error("Exception in SafetyShield::computesPotentialTrajectory: {}", exc.what());
+    //spdlog::error("Exception in SafetyShield::computesPotentialTrajectory: {}", exc.what());
     throw exc;
   }
 }
@@ -584,7 +584,7 @@ Motion SafetyShield::step(double cycle_begin_time) {
     new_ltt_processed_ = true;
     return next_motion_;
   } catch (const std::exception &exc) {
-    spdlog::error("Exception in SafetyShield::getNextCycle: {}", exc.what());
+    //spdlog::error("Exception in SafetyShield::getNextCycle: {}", exc.what());
   }
 }
 
@@ -642,7 +642,7 @@ void SafetyShield::newLongTermTrajectory(const std::vector<double> &goal_positio
     }
     last_replan_start_motion_ = Motion(cycle_begin_time_, dummy_q);
   } catch (const std::exception &exc) {
-    spdlog::error("Exception in SafetyShield::newLongTermTrajectory: {}", exc.what());
+    //spdlog::error("Exception in SafetyShield::newLongTermTrajectory: {}", exc.what());
   }
 }
 

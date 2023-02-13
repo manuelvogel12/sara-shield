@@ -20,7 +20,7 @@
 #include <vector>
 #include <assert.h>
 
-#include "spdlog/spdlog.h" // https://github.com/gabime/spdlog
+//#include "spdlog/spdlog.h" // https://github.com/gabime/spdlog
 
 #include "safety_shield/motion.h"
 

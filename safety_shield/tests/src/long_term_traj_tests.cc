@@ -1,7 +1,7 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
+//#include <spdlog/spdlog.h>
 
 #include "long_term_traj_fixture.h"
 #include "safety_shield/long_term_traj.h"

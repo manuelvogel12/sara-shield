@@ -1,7 +1,7 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
+//#include <spdlog/spdlog.h>
 
 #include "path_fixture.h"
 #include "safety_shield/path.h"

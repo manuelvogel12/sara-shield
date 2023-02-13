@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <math.h> 
 
-#include "spdlog/spdlog.h" 
+//#include "spdlog/spdlog.h" 
 
 #include "human_reach_fixture.h"
 #include "safety_shield/human_reach.h"

@@ -2,7 +2,7 @@
 #include <math.h> 
 
 #include <Eigen/Dense>
-#include "spdlog/spdlog.h" 
+//#include "spdlog/spdlog.h" 
 
 #include "verify_iso_fixture.h"
 #include "safety_shield/verify_iso.h"

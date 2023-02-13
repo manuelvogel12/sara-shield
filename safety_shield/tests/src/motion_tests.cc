@@ -1,7 +1,7 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
+//#include <spdlog/spdlog.h>
 
 #include "motion_fixture.h"
 #include "safety_shield/motion.h"
