@@ -5,6 +5,10 @@ project(safety_shield)
 add_compile_options(-std=c++17)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+#SET(CMAKE_INSTALL_RPATH "/opt/xbot/lib")
+
+##Find XBOT2
+find_package(xbot2 REQUIRED)
 
 ## Find catkin macros and libraries
 #find_package(Eigen3 3.4 REQUIRED NO_MODULE)
@@ -37,30 +41,61 @@ add_library(${PROJECT_NAME}
 add_subdirectory(external/pybind11)
 add_subdirectory(external/SaRA/ReachLib)
 add_subdirectory(external/LongTermPlanner)
-add_subdirectory(external/spdlog)
+#add_subdirectory(external/spdlog)
 add_subdirectory(external/yaml-cpp)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC external/pybind11/include
     PUBLIC external/ReachLib/include
     PUBLIC external/LongTermPlanner/include
-    PUBLIC external/spdlog/include
+#    PUBLIC external/spdlog/include
     PUBLIC external/yaml-cpp/include
 )
 
 target_link_directories(${PROJECT_NAME}
     PUBLIC external/ReachLib/src
     PUBLIC external/LongTermPlanner/src
-    PUBLIC external/spdlog/src
+#    PUBLIC external/spdlog/src
     PUBLIC external/yaml-cpp/src
 )
 
-target_link_libraries(${PROJECT_NAME} SaRA long_term_planner spdlog yaml-cpp)
+target_link_libraries(${PROJECT_NAME} SaRA long_term_planner yaml-cpp)
+
+## TestNode
+add_xbot2_plugin(testnode src/testnode.cc)
+
+#target_include_directories(testnode
+#    PRIVATE external/pybind11/include
+#    PRIVATE external/ReachLib/include
+#    PRIVATE external/LongTermPlanner/include
+#   PUBLIC external/spdlog/include
+#    PRIVATE external/yaml-cpp/include
+#)
+
+#target_link_directories(testnode
+#    PRIVATE external/ReachLib/src
+#    PRIVATE external/LongTermPlanner/src
+ #   PUBLIC external/spdlog/src
+#    PRIVATE external/yaml-cpp/src
+#)
+
+target_link_libraries(testnode 
+ #   PUBLIC spdlog 
+    PRIVATE ${PROJECT_NAME}
+    PRIVATE SaRA 
+    PRIVATE long_term_planner 
+    PRIVATE yaml-cpp
+ )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
+install(TARGETS testnode DESTINATION /opt/xbot/lib)
+#set_target_properties(testnode PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_executable(debug src/debug.cc)
-target_link_libraries(debug ${PROJECT_NAME} long_term_planner spdlog yaml-cpp)
+
+target_link_libraries(debug ${PROJECT_NAME} long_term_planner yaml-cpp)
+
+
 #############
 ## GTest ##
 #############
@@ -107,4 +142,4 @@ gtest_discover_tests(safety_shield_tests)
 ## Bindings ##
 ##############
 pybind11_add_module(safety_shield_py MODULE bindings/safety_shield_bindings.cpp)
-target_link_libraries(safety_shield_py PRIVATE ${PROJECT_NAME} long_term_planner spdlog yaml-cpp)
+target_link_libraries(safety_shield_py PRIVATE ${PROJECT_NAME} long_term_planner yaml-cpp)
