@@ -23,21 +23,21 @@ public:
 
     bool on_initialize() override;
 
-    void starting() override;
+    void on_start() override;
 
     void run() override;
 
 
 private:
     
-    Eigen::VectorXd _q_start, _v_start,_q_ref,_q_home;
-    //safety_shield::SafetyShield _shield;
-    //std::vector<reach_lib::Point> _dummy_human_meas(21);
+    //Eigen::VectorXd _q_start, _v_start,_v_new,_q_ref,_q_home;
+    Eigen::VectorXd _q;
+    safety_shield::SafetyShield _shield;
+    std::vector<reach_lib::Point> _dummy_human_meas;
     int _iteration = 0;
     double t = 0.0;
-    void set_control_mode();
-    double _homing_time;
-    double _fake_time;
+    //double _homing_time;
+    //double _fake_time;
     
 };
 
