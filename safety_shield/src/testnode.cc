@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <iostream>
 #include <fstream>
-
+#include "fmt/chrono.h"
 
 bool TestNode::on_initialize()
 {
@@ -26,8 +26,10 @@ void TestNode::on_start()
     //_robot->getVelocityReference(_v_start);
 
     bool activate_shield = true;
+    _st_time = chrono::steady_clock::now();
+
     double sample_time = 0.001;
-    //Note: executing directory is /tmp/something/
+    //Note: executing directory is /tmp/something/ TODO: make path relative somehow
     std::string trajectory_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml");
     std::string robot_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml");
     std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
@@ -39,23 +41,23 @@ void TestNode::on_start()
     double init_roll = 0.0;
     double init_pitch = 0.0;
     double init_yaw = 0.0;
-    std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     //YAML::Node robot_config = YAML::LoadFile(robot_config_file);
     //std::cout<<robot_config["robot_name"].as<std::string>()<<std::endl;
 
     _shield = safety_shield::SafetyShield(activate_shield,
-    sample_time,
-    trajectory_config_file,
-    robot_config_file,
-    mocap_config_file,
-    init_x,
-    init_y,
-    init_z,
-    init_roll,
-    init_pitch,
-    init_yaw,
-    init_qpos);
+      sample_time,
+      trajectory_config_file,
+      robot_config_file,
+      mocap_config_file,
+      init_x,
+      init_y,
+      init_z,
+      init_roll,
+      init_pitch,
+      init_yaw,
+      init_qpos);
 
     // Dummy human measurement
 
@@ -68,7 +70,6 @@ void TestNode::on_start()
     //auto start_time = std::chrono::system_clock::now();
     //double t = std::chrono::duration<double>(std::chrono::system_clock::now()-start_time).count();
     //spdlog::info("Debug started.");
-    double t = 0.0;
 
 
     // we can switch to run
@@ -81,14 +82,18 @@ void TestNode::run()
     	
 
     _iteration++;
-    t += 0.001;
+
+    auto st_elapsed = chrono::steady_clock::now() - _st_time;
+    double t = std::chrono::duration<double>(st_elapsed).count();
 
     _shield.humanMeasurement(_dummy_human_meas, t);
 
-    t += 0.003;
+    st_elapsed = chrono::steady_clock::now() - _st_time;
+    t = std::chrono::duration<double>(st_elapsed).count();
+
     if (_iteration % 2 == 0) {
-        std::vector<double> qpos{0.2*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
-        std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        std::vector<double> qpos{0.2*t, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
+        std::vector<double> qvel{0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         _shield.newLongTermTrajectory(qpos, qvel);
     }
 
@@ -104,11 +109,24 @@ void TestNode::run()
     //    std::cout << velocity << std::endl;
 
     std::vector<double> q = next_motion.getAngle();
+    //change size of q to 13
+    for(int i = q.size(); i< 13; i++)
+        q.push_back(0);
+
+    //TODO: remove DEBUG
+    std::cout<<"q at time t="<<t<<": ";
+    for(double d: q){
+        std::cout<<d<<",";
+    }
+    std::cout<<std::endl;
 
     //Eigen::VectorXd _q = Eigen::VectorXd::Zero(13);
     Eigen::Map<Eigen::VectorXd> _q(&q[0], q.size()); 
     _robot->setPositionReference(_q);
     _robot->move();
+    
+    _robot->getPositionReference(_q_obs);
+    std::cout<<"observed: \n "<<_q_obs<<std::endl;
 
 
     //_shield.reset(true, init_x, init_y, init_z, init_roll, init_pitch, init_yaw, init_qpos, t);
