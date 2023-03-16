@@ -31,11 +31,11 @@ public:
 private:
     
     //Eigen::VectorXd _q_start, _v_start,_v_new,_q_ref,_q_home;
-    Eigen::VectorXd _q;
+    Eigen::VectorXd _q, _q_obs;
     safety_shield::SafetyShield _shield;
     std::vector<reach_lib::Point> _dummy_human_meas;
     int _iteration = 0;
-    double t = 0.0;
+    chrono::steady_clock::time_point _st_time;
     //double _homing_time;
     //double _fake_time;
     
