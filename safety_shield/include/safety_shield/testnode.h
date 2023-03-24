@@ -3,6 +3,7 @@
 #define TESTNODE_H
 
 #include <xbot2/xbot2.h>
+#include <ros/ros.h>
 
 #include <vector>
 #include "safety_shield/safety_shield.h"
@@ -12,6 +13,8 @@
 #include "safety_shield/long_term_traj.h"
 #include "safety_shield/motion.h"
 #include "reach_lib.hpp"
+#include "visualization_msgs/MarkerArray.h"
+#include "custom_robot_msgs/PositionsHeadered.h"
 
 using namespace XBot;
 class TestNode : public ControlPlugin
@@ -36,6 +39,11 @@ private:
     std::vector<reach_lib::Point> _dummy_human_meas;
     int _iteration = 0;
     chrono::steady_clock::time_point _st_time;
+    ros::Subscriber _human_joint_sub;
+    ros::Publisher _human_marker_pub;
+    
+    void human_joint_callback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg);
+    //void human_joint_callback(const std_msgs::String& data);
     //double _homing_time;
     //double _fake_time;
     

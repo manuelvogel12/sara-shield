@@ -3,12 +3,18 @@ project(safety_shield)
 
 ## Compile as C++17
 add_compile_options(-std=c++17)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-
 ##Find XBOT2
 find_package(xbot2 REQUIRED)
+find_package(roscpp REQUIRED)
 
 ## Find catkin macros and libraries
 #find_package(Eigen3 3.4 REQUIRED NO_MODULE)
@@ -63,13 +69,18 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC SaRA 
     PUBLIC long_term_planner 
     PUBLIC yaml-cpp
+    PUBLIC ${catkin_EXPORTED_TARGETS}
 )
 
 
 ## TestNode ##
 add_xbot2_plugin(testnode src/testnode.cc)
 
-target_link_libraries(testnode PUBLIC ${PROJECT_NAME})
+target_link_libraries(testnode 
+	PUBLIC ${PROJECT_NAME}
+	
+	PUBLIC XBotInterface::XBotInterface
+	PUBLIC ${roscpp_LIBRARIES})
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)

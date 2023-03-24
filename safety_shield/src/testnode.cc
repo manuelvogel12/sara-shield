@@ -11,6 +11,13 @@
 
 bool TestNode::on_initialize()
 {
+    //ROS
+    int argc = 0;
+    char **argv = NULL;
+    ros::init(argc, argv, "testnode");
+    ros::NodeHandle nh;
+    _human_joint_sub = nh.subscribe("/human_joint_pos", 1000, &TestNode::human_joint_callback, this);
+    _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 1000);
     return true;
 }
 
@@ -101,7 +108,7 @@ void TestNode::run()
     t = std::chrono::duration<double>(st_elapsed).count();
 
     if (_iteration % 5 == 0) {
-        std::vector<double> qpos{1.2*t, 0.2*t, 0.0, 0.0, -0.5*t, 0.0, 0.0, 0.2*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
+        std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
         std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         _shield.newLongTermTrajectory(qpos, qvel);
     }
@@ -193,8 +200,38 @@ void TestNode::run()
     // note: getPeriodSec() returns the nominal period
     //_fake_time += getPeriodSec();
     */
-
+    ros::spinOnce();
 }
+
+void TestNode::human_joint_callback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg){
+    
+    visualization_msgs::MarkerArray markerArray = visualization_msgs::MarkerArray();
+    _dummy_human_meas.clear();
+    int id = 0;
+    for(auto& point: msg->data)
+    {
+        _dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y, point.z));
+        visualization_msgs::Marker marker = visualization_msgs::Marker();
+        marker.header.frame_id = "base_link";
+        marker.id = id++;
+        marker.type = marker.SPHERE;
+        marker.action = marker.ADD;
+        marker.scale.x = 0.1;
+        marker.scale.y = 0.1;
+        marker.scale.z = 0.1;
+        marker.color.a = 1.0;
+        marker.color.r = 1.0;
+        marker.color.g = 1.0;
+        marker.color.b = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.pose.position.x = point.x;
+        marker.pose.position.y = point.y;
+        marker.pose.position.z = point.z;
+        markerArray.markers.emplace_back(marker);
+    }
+    _human_marker_pub.publish(markerArray);
+}
+
 
 XBOT2_REGISTER_PLUGIN(TestNode, testnode)
 
