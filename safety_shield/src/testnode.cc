@@ -18,6 +18,7 @@ bool TestNode::on_initialize()
     ros::NodeHandle nh;
     _human_joint_sub = nh.subscribe("/human_joint_pos", 1000, &TestNode::human_joint_callback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 1000);
+    _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 1000);
     return true;
 }
 
@@ -203,33 +204,245 @@ void TestNode::run()
     ros::spinOnce();
 }
 
+
+// Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
 void TestNode::human_joint_callback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg){
     
-    visualization_msgs::MarkerArray markerArray = visualization_msgs::MarkerArray();
+    visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
+    visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
     _dummy_human_meas.clear();
-    int id = 0;
+    //int id = 0;
     for(auto& point: msg->data)
     {
         _dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y, point.z));
+    }
+        //visualization of Robot and Human Capsules
+    
+    std::vector<std::vector<double>> humanCapsules =  _shield.getHumanReachCapsules(1);
+    createPoints(humanMarkerArray, 3*humanCapsules.size(), visualization_msgs::Marker::CYLINDER, 2);
+    createCapsules(humanMarkerArray, humanCapsules);
+
+    std::vector<std::vector<double>> robotReachCapsules =  _shield.getRobotReachCapsules();
+    createPoints(robotMarkerArray, 3*robotReachCapsules.size(), visualization_msgs::Marker::CYLINDER, 0);
+    createCapsules(robotMarkerArray, robotReachCapsules);
+
+    //std::cout <<"human size: "<<humanCapsules.size()<<"robot size: "<< robotReachCapsules.size()<< "human markers: "<<humanMarkerArray.markers.size()<< std::endl;
+/*
+    for(std::vector<double>& capsule: humanCapsules)
+    {
+        double capsule_radius = capsule[6];
+        double p1x = capsule[0];
+        double p1y = capsule[1];
+        double p1z = capsule[2];
+        double p2x = capsule[3];
+        double p2y = capsule[4];
+        double p2z = capsule[5];
+        double v2_x = (p2x-p1x);
+        double v2_y = (p2y-p1y);
+        double v2_z = (p2z-p1z);
+        double norm = sqrt(pow(v2_x, 2) + pow(v2_y, 2) + pow(v2_z, 2));
+
+        // Rotate z axis vector to direction vector according to https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another/1171995#1171995
+        double a_x = -v2_y/norm;
+        double a_y = v2_x/norm;
+        double a_z = 0;
+        double a_w = 1 + v2_z/norm;
+        double norm_q = sqrt(pow(a_w, 2) + pow(a_x, 2) + pow(a_y, 2) + pow(a_z, 2));
+
+        visualization_msgs::Marker cylinder = visualization_msgs::Marker();
+        cylinder.header.frame_id = "world";
+        cylinder.id = id++;
+        cylinder.type = cylinder.CYLINDER;
+        cylinder.action = cylinder.ADD;
+        cylinder.scale.x = 2*capsule_radius;
+        cylinder.scale.y = 2*capsule_radius;
+        cylinder.scale.z = norm;
+        cylinder.color.a = 1.0;
+        cylinder.color.r = 1.0;
+        cylinder.color.g = 1.0;
+        cylinder.color.b = 0.0;
+        cylinder.pose.orientation.w = a_w/norm_q;
+        cylinder.pose.orientation.x = a_x/norm_q;
+        cylinder.pose.orientation.y = a_y/norm_q;
+        cylinder.pose.orientation.z = a_z/norm_q;
+        cylinder.pose.position.x = 0.5 * p1x + 0.5 * p2x;
+        cylinder.pose.position.y = 0.5 * p1y + 0.5 * p2y;
+        cylinder.pose.position.z = 0.5 * p1z + 0.5 * p2z;
+        markerArray.markers.emplace_back(cylinder);
+
+        visualization_msgs::Marker marker1 = visualization_msgs::Marker();
+        marker1.header.frame_id = "world";
+        marker1.id = id++;
+        marker1.type = marker1.SPHERE;
+        marker1.action = marker1.ADD;
+        marker1.scale.x = 2*capsule_radius;
+        marker1.scale.y = 2*capsule_radius;
+        marker1.scale.z = 2*capsule_radius;
+        marker1.color.a = 1.0;
+        marker1.color.r = 1.0;
+        marker1.color.g = 1.0;
+        marker1.color.b = 0.0;
+        marker1.pose.orientation.w = 1.0;
+        marker1.pose.position.x = p1x;
+        marker1.pose.position.y = p1y;
+        marker1.pose.position.z = p1z;
+        markerArray.markers.emplace_back(marker1); 
+        
+        visualization_msgs::Marker marker2 = visualization_msgs::Marker();
+        marker2.header.frame_id = "world";
+        marker2.id = id++;
+        marker2.type = marker2.SPHERE;
+        marker2.action = marker2.ADD;
+        marker2.scale.x = 2*capsule_radius;
+        marker2.scale.y = 2*capsule_radius;
+        marker2.scale.z = 2*capsule_radius;
+        marker2.color.a = 1.0;
+        marker2.color.r = 1.0;
+        marker2.color.g = 1.0;
+        marker2.color.b = 0.0;
+        marker2.pose.orientation.w = 1.0;
+        marker2.pose.position.x = p2x;
+        marker2.pose.position.y = p2y;
+        marker2.pose.position.z = p2z;
+        markerArray.markers.emplace_back(marker2);
+
+    }
+    std::vector<std::vector<double>> robotReachCapsules =  _shield.getRobotReachCapsules();
+
+    for(std::vector<double>& capsule: robotReachCapsules)
+    {
         visualization_msgs::Marker marker = visualization_msgs::Marker();
-        marker.header.frame_id = "base_link";
+        marker.header.frame_id = "world";
         marker.id = id++;
         marker.type = marker.SPHERE;
         marker.action = marker.ADD;
-        marker.scale.x = 0.1;
-        marker.scale.y = 0.1;
-        marker.scale.z = 0.1;
+        marker.scale.x = capsule[6];
+        marker.scale.y = capsule[6];
+        marker.scale.z = capsule[6];
         marker.color.a = 1.0;
         marker.color.r = 1.0;
-        marker.color.g = 1.0;
+        marker.color.g = 0.0;
         marker.color.b = 0.0;
         marker.pose.orientation.w = 1.0;
-        marker.pose.position.x = point.x;
-        marker.pose.position.y = point.y;
-        marker.pose.position.z = point.z;
+        marker.pose.position.x = capsule[0];
+        marker.pose.position.y = capsule[1];
+        marker.pose.position.z = capsule[2];
         markerArray.markers.emplace_back(marker);
     }
-    _human_marker_pub.publish(markerArray);
+    */
+    
+    _human_marker_pub.publish(humanMarkerArray);
+    _robot_marker_pub.publish(robotMarkerArray);
+}
+
+void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
+    int color_type) {
+  int prev_size = markers.markers.size();
+  for(int i = 0; i < nb_points_to_add; i++) {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id="world";
+    marker.ns = "shapes";
+    marker.id = prev_size+i;
+    marker.type = shape_type;
+    if(color_type == 0) { // ROBOT
+      marker.color.r = 0.0f;
+      marker.color.g = 1.0f;
+      marker.color.b = 0.0f;
+    }
+    else if (color_type == 1) { // HUMAN_CYLINDER
+      marker.color.r = 0.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 1.0f;
+    } else if (color_type == 2) { //HUMAN_REACH
+      marker.color.r = 1.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 0.0f;
+    }   
+    marker.color.a = 1.0f;
+    marker.lifetime = ros::Duration();
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 0.0;
+    marker.scale.x = 0.0;
+    marker.scale.y = 0.0;
+    marker.scale.z = 0.0;
+    markers.markers.push_back(marker);
+  }
+}
+
+void TestNode::createCapsules(visualization_msgs::MarkerArray& markers, const std::vector<std::vector<double>>& capsules) { 
+  auto marker = markers.markers.begin();
+  for(const std::vector<double>& cap :capsules) {
+    geometry_msgs::Point p1;
+    p1.x = cap[0];
+    p1.y = cap[1];
+    p1.z = cap[2];
+    geometry_msgs::Point p2;
+    p2.x = cap[3];
+    p2.y = cap[4];
+    p2.z = cap[5];
+    double radius = 0.5*cap[6];
+    //first circle
+    createSphere(p1, radius, ros::Time::now(), *marker);
+    marker++;
+    //second circle
+    createSphere(p2, radius, ros::Time::now(), *marker);
+    marker++;
+    //middle cylinder
+    createCylinder(p1, p2,radius, ros::Time::now(), *marker);
+    marker++;
+  }
+}
+
+void TestNode::createSphere(const geometry_msgs::Point& pos, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker) {
+  marker.type = visualization_msgs::Marker::SPHERE;
+  marker.pose.position = pos;
+  marker.scale.x = 2*radius;
+  marker.scale.y = 2*radius;
+  marker.scale.z = 2*radius;
+  marker.header.stamp = stamp;
+}
+
+
+void TestNode::createCylinder(const geometry_msgs::Point& p1, const geometry_msgs::Point p2, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker) {
+  double p1x = p1.x;
+  double p1y = p1.y;
+  double p1z = p1.z;
+  double p2x = p2.x;
+  double p2y = p2.y;
+  double p2z = p2.z;
+  double v2_x = (p2x-p1x);
+  double v2_y = (p2y-p1y);
+  double v2_z = (p2z-p1z);
+  double norm = sqrt(pow(v2_x, 2) + pow(v2_y, 2) + pow(v2_z, 2));
+  if(norm > 1e-6) {
+    marker.type = visualization_msgs::Marker::CYLINDER;
+    marker.pose.position.x = (p1x + p2x)/2;
+    marker.pose.position.y = (p1y + p2y)/2;
+    marker.pose.position.z = (p1z + p2z)/2;
+    // Rotate z axis vector to direction vector according to https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another/1171995#1171995
+    double a_x = -v2_y/norm;
+    double a_y = v2_x/norm;
+    double a_z = 0;
+    double a_w = 1 + v2_z/norm;
+    double norm_q = sqrt(pow(a_w, 2) + pow(a_x, 2) + pow(a_y, 2) + pow(a_z, 2));
+    marker.pose.orientation.w = a_w/norm_q;
+    marker.pose.orientation.x = a_x/norm_q;
+    marker.pose.orientation.y = a_y/norm_q;
+    marker.pose.orientation.z = a_z/norm_q;
+    marker.scale.z = norm;
+    marker.scale.y = 2*radius;
+    marker.scale.x = 2*radius;
+  }
+  else{
+    marker.scale.x = 0;
+    marker.scale.y = 0;
+    marker.scale.z = 0;
+  }
+  marker.header.stamp = stamp;
 }
 
 

@@ -41,8 +41,18 @@ private:
     chrono::steady_clock::time_point _st_time;
     ros::Subscriber _human_joint_sub;
     ros::Publisher _human_marker_pub;
+    ros::Publisher _robot_marker_pub;
     
     void human_joint_callback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg);
+
+    void createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
+    int color_type);
+
+    void createCapsules(visualization_msgs::MarkerArray& markers, const std::vector<std::vector<double>>& capsules);
+
+    void createSphere(const geometry_msgs::Point& pos, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker);
+
+    void createCylinder(const geometry_msgs::Point& p1, const geometry_msgs::Point p2, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker);
     //void human_joint_callback(const std_msgs::String& data);
     //double _homing_time;
     //double _fake_time;
