@@ -9,6 +9,14 @@
 #include "fmt/chrono.h"
 #include <cstdlib>
 
+
+TestNode::TestNode(const Args& args)
+  :ControlPlugin(args),
+  _tfBuffer(tf2_ros::Buffer()),
+  _tfListener(tf2_ros::TransformListener(_tfBuffer))
+{
+}
+
 bool TestNode::on_initialize()
 {
     //ROS
@@ -16,7 +24,8 @@ bool TestNode::on_initialize()
     char **argv = NULL;
     ros::init(argc, argv, "testnode");
     ros::NodeHandle nh;
-    _human_joint_sub = nh.subscribe("/human_joint_pos", 1000, &TestNode::human_joint_callback, this);
+    _model_state_sub = nh.subscribe("/gazebo/model_states", 1000, &TestNode::modelStatesCallback, this);
+    _human_joint_sub = nh.subscribe("/human_joint_pos", 1000, &TestNode::humanJointCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 1000);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 1000);
     return true;
@@ -108,8 +117,13 @@ void TestNode::run()
     st_elapsed = chrono::steady_clock::now() - _st_time;
     t = std::chrono::duration<double>(st_elapsed).count();
 
-    if (_iteration % 5 == 0) {
-        std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
+    // if (_iteration % 5 == 0) {
+    //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
+    //     std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    //     _shield.newLongTermTrajectory(qpos, qvel);
+    // }
+    if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
+        std::vector<double> qpos{0.02*t, 0.02*t, -0.02*t, -0.02*t, -0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
         std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         _shield.newLongTermTrajectory(qpos, qvel);
     }
@@ -117,6 +131,12 @@ void TestNode::run()
     //debug: measure performance
     auto time_before = std::chrono::system_clock::now();
     safety_shield::Motion next_motion = _shield.step(t);
+    if(!_shield.getSafety()){
+      jerror("NOT SAFE");
+    }
+    //else{
+    //  jwarn("SAFE");
+    //}
     double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
     std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
 
@@ -204,17 +224,66 @@ void TestNode::run()
     ros::spinOnce();
 }
 
+//convert the gazebo transformation between world and base_link into a tf
+void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg)
+{
+  int index = -1;
+  for (int i = 0; i < msg->name.size(); i++) {
+    if (msg->name[i] == "ModularBot") {
+      index = i;
+      break;
+    }
+  }
+
+  if (index == -1) {
+    ROS_ERROR("Could not find robot modular_robot in model states message");
+    return;
+  }
+
+  tf::Transform transform;
+  geometry_msgs::Pose pose = msg->pose[index];
+  transform.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
+  transform.setRotation(tf::Quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w));
+
+  static tf::TransformBroadcaster br;
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "base_link"));
+}
+
 
 // Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
-void TestNode::human_joint_callback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg){
+void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg){
     
     visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
     visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
     _dummy_human_meas.clear();
     //int id = 0;
-    for(auto& point: msg->data)
+    for(const geometry_msgs::Point& point: msg->data)
     {
-        _dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y, point.z));
+        //TODO: Transform from world to base_link
+        geometry_msgs::TransformStamped transformation;
+        try
+        {
+            transformation =  _tfBuffer.lookupTransform("base_link", "world", msg->header.stamp, ros::Duration(0.001));
+        }catch(tf2::LookupException){
+            ROS_ERROR("NO TRANSFORM FOUND");
+        }
+        catch(tf2::ExtrapolationException){
+            ROS_ERROR("NO TRANSFORM FOUND");
+        } 
+        
+        //geometry_msgs::PoseStamped point_global;
+        //point_global.pose.position = point;
+        //geometry_msgs::PoseStamped point_local = _tfBuffer.transform(point_global, "base_link", ros::Duration(0.2));
+        //_dummy_human_meas.emplace_back(reach_lib::Point(point_local.x, point_local.y, point_local.z));
+        
+        //TODO: fix by including rotation (proper transform)
+        geometry_msgs::Point pointLocal;
+        pointLocal.x = point.x + transformation.transform.translation.x;
+        pointLocal.y = point.y + transformation.transform.translation.y;
+        pointLocal.z = point.z + transformation.transform.translation.z;
+        _dummy_human_meas.emplace_back(reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+
+        //_dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y, point.z));
     }
         //visualization of Robot and Human Capsules
     
@@ -226,111 +295,6 @@ void TestNode::human_joint_callback(const custom_robot_msgs::PositionsHeaderedCo
     createPoints(robotMarkerArray, 3*robotReachCapsules.size(), visualization_msgs::Marker::CYLINDER, 0);
     createCapsules(robotMarkerArray, robotReachCapsules);
 
-    //std::cout <<"human size: "<<humanCapsules.size()<<"robot size: "<< robotReachCapsules.size()<< "human markers: "<<humanMarkerArray.markers.size()<< std::endl;
-/*
-    for(std::vector<double>& capsule: humanCapsules)
-    {
-        double capsule_radius = capsule[6];
-        double p1x = capsule[0];
-        double p1y = capsule[1];
-        double p1z = capsule[2];
-        double p2x = capsule[3];
-        double p2y = capsule[4];
-        double p2z = capsule[5];
-        double v2_x = (p2x-p1x);
-        double v2_y = (p2y-p1y);
-        double v2_z = (p2z-p1z);
-        double norm = sqrt(pow(v2_x, 2) + pow(v2_y, 2) + pow(v2_z, 2));
-
-        // Rotate z axis vector to direction vector according to https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another/1171995#1171995
-        double a_x = -v2_y/norm;
-        double a_y = v2_x/norm;
-        double a_z = 0;
-        double a_w = 1 + v2_z/norm;
-        double norm_q = sqrt(pow(a_w, 2) + pow(a_x, 2) + pow(a_y, 2) + pow(a_z, 2));
-
-        visualization_msgs::Marker cylinder = visualization_msgs::Marker();
-        cylinder.header.frame_id = "world";
-        cylinder.id = id++;
-        cylinder.type = cylinder.CYLINDER;
-        cylinder.action = cylinder.ADD;
-        cylinder.scale.x = 2*capsule_radius;
-        cylinder.scale.y = 2*capsule_radius;
-        cylinder.scale.z = norm;
-        cylinder.color.a = 1.0;
-        cylinder.color.r = 1.0;
-        cylinder.color.g = 1.0;
-        cylinder.color.b = 0.0;
-        cylinder.pose.orientation.w = a_w/norm_q;
-        cylinder.pose.orientation.x = a_x/norm_q;
-        cylinder.pose.orientation.y = a_y/norm_q;
-        cylinder.pose.orientation.z = a_z/norm_q;
-        cylinder.pose.position.x = 0.5 * p1x + 0.5 * p2x;
-        cylinder.pose.position.y = 0.5 * p1y + 0.5 * p2y;
-        cylinder.pose.position.z = 0.5 * p1z + 0.5 * p2z;
-        markerArray.markers.emplace_back(cylinder);
-
-        visualization_msgs::Marker marker1 = visualization_msgs::Marker();
-        marker1.header.frame_id = "world";
-        marker1.id = id++;
-        marker1.type = marker1.SPHERE;
-        marker1.action = marker1.ADD;
-        marker1.scale.x = 2*capsule_radius;
-        marker1.scale.y = 2*capsule_radius;
-        marker1.scale.z = 2*capsule_radius;
-        marker1.color.a = 1.0;
-        marker1.color.r = 1.0;
-        marker1.color.g = 1.0;
-        marker1.color.b = 0.0;
-        marker1.pose.orientation.w = 1.0;
-        marker1.pose.position.x = p1x;
-        marker1.pose.position.y = p1y;
-        marker1.pose.position.z = p1z;
-        markerArray.markers.emplace_back(marker1); 
-        
-        visualization_msgs::Marker marker2 = visualization_msgs::Marker();
-        marker2.header.frame_id = "world";
-        marker2.id = id++;
-        marker2.type = marker2.SPHERE;
-        marker2.action = marker2.ADD;
-        marker2.scale.x = 2*capsule_radius;
-        marker2.scale.y = 2*capsule_radius;
-        marker2.scale.z = 2*capsule_radius;
-        marker2.color.a = 1.0;
-        marker2.color.r = 1.0;
-        marker2.color.g = 1.0;
-        marker2.color.b = 0.0;
-        marker2.pose.orientation.w = 1.0;
-        marker2.pose.position.x = p2x;
-        marker2.pose.position.y = p2y;
-        marker2.pose.position.z = p2z;
-        markerArray.markers.emplace_back(marker2);
-
-    }
-    std::vector<std::vector<double>> robotReachCapsules =  _shield.getRobotReachCapsules();
-
-    for(std::vector<double>& capsule: robotReachCapsules)
-    {
-        visualization_msgs::Marker marker = visualization_msgs::Marker();
-        marker.header.frame_id = "world";
-        marker.id = id++;
-        marker.type = marker.SPHERE;
-        marker.action = marker.ADD;
-        marker.scale.x = capsule[6];
-        marker.scale.y = capsule[6];
-        marker.scale.z = capsule[6];
-        marker.color.a = 1.0;
-        marker.color.r = 1.0;
-        marker.color.g = 0.0;
-        marker.color.b = 0.0;
-        marker.pose.orientation.w = 1.0;
-        marker.pose.position.x = capsule[0];
-        marker.pose.position.y = capsule[1];
-        marker.pose.position.z = capsule[2];
-        markerArray.markers.emplace_back(marker);
-    }
-    */
-    
     _human_marker_pub.publish(humanMarkerArray);
     _robot_marker_pub.publish(robotMarkerArray);
 }
@@ -340,7 +304,7 @@ void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_poi
   int prev_size = markers.markers.size();
   for(int i = 0; i < nb_points_to_add; i++) {
     visualization_msgs::Marker marker;
-    marker.header.frame_id="world";
+    marker.header.frame_id="base_link";
     marker.ns = "shapes";
     marker.id = prev_size+i;
     marker.type = shape_type;
@@ -365,7 +329,7 @@ void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_poi
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = 0.0;
+    marker.pose.orientation.w = 1.0;
     marker.scale.x = 0.0;
     marker.scale.y = 0.0;
     marker.scale.z = 0.0;
@@ -384,7 +348,7 @@ void TestNode::createCapsules(visualization_msgs::MarkerArray& markers, const st
     p2.x = cap[3];
     p2.y = cap[4];
     p2.z = cap[5];
-    double radius = 0.5*cap[6];
+    double radius = cap[6];
     //first circle
     createSphere(p1, radius, ros::Time::now(), *marker);
     marker++;
@@ -392,7 +356,7 @@ void TestNode::createCapsules(visualization_msgs::MarkerArray& markers, const st
     createSphere(p2, radius, ros::Time::now(), *marker);
     marker++;
     //middle cylinder
-    createCylinder(p1, p2,radius, ros::Time::now(), *marker);
+    createCylinder(p1, p2, radius, ros::Time::now(), *marker);
     marker++;
   }
 }

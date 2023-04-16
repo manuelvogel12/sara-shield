@@ -15,6 +15,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ##Find XBOT2
 find_package(xbot2 REQUIRED)
 find_package(roscpp REQUIRED)
+find_package(catkin REQUIRED COMPONENTS 
+  roscpp 
+  tf2 
+  tf2_ros
+  geometry_msgs
+  visualization_msgs
+  gazebo_ros
+)
+
 
 ## Find catkin macros and libraries
 #find_package(Eigen3 3.4 REQUIRED NO_MODULE)
@@ -69,19 +78,34 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC SaRA 
     PUBLIC long_term_planner 
     PUBLIC yaml-cpp
-    PUBLIC ${catkin_EXPORTED_TARGETS}
+    #PUBLIC ${catkin_EXPORTED_TARGETS}
 )
 
 
 ## TestNode ##
+#catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES testnode
+#  CATKIN_DEPENDS roscpp tf2 tf2_ros
+#)
+
+#include_directories(
+#  include
+#  ${catkin_INCLUDE_DIRS}
+#)
+
 add_xbot2_plugin(testnode src/testnode.cc)
+
+target_include_directories(testnode
+  PUBLIC /opt/ros/noetic/lib
+  )
 
 target_link_libraries(testnode 
 	PUBLIC ${PROJECT_NAME}
-	
 	PUBLIC XBotInterface::XBotInterface
-	PUBLIC ${roscpp_LIBRARIES})
-
+	PUBLIC ${roscpp_LIBRARIES}
+  PUBLIC ${catkin_LIBRARIES}
+  )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 #install(TARGETS ${PROJECT_NAME} DESTINATION /opt/xbot/lib)
