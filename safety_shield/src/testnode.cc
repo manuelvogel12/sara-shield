@@ -19,15 +19,10 @@ TestNode::TestNode(const Args& args)
 
 bool TestNode::on_initialize()
 {
-    //ROS
+    //init ROS
     int argc = 0;
     char **argv = NULL;
     ros::init(argc, argv, "testnode");
-    ros::NodeHandle nh;
-    _model_state_sub = nh.subscribe("/gazebo/model_states", 1000, &TestNode::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/human_joint_pos", 1000, &TestNode::humanJointCallback, this);
-    _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 1000);
-    _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 1000);
     return true;
 }
 
@@ -35,9 +30,17 @@ bool TestNode::on_initialize()
 
 void TestNode::on_start()
 {
+    // ros: subsribe to topics and advertise topics
+    ros::NodeHandle nh;
+    _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
+    _human_joint_sub = nh.subscribe("/human_joint_pos", 100, &TestNode::humanJointCallback, this);
+    _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
+    _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
+    
     // we must explicitly set the control mode for our robot
     // in this case, we will only send positions
     _robot->setControlMode(ControlMode::Position() + ControlMode::Velocity());
+    
     // do some on-start initialization
     _robot->sense();
     //_robot->getPositionReference(_q_start);
@@ -100,7 +103,6 @@ void TestNode::on_start()
 void TestNode::run()
 {
 
-
     _iteration++;
 
     auto st_elapsed = chrono::steady_clock::now() - _st_time;
@@ -116,6 +118,8 @@ void TestNode::run()
 
     st_elapsed = chrono::steady_clock::now() - _st_time;
     t = std::chrono::duration<double>(st_elapsed).count();
+
+    //Dummy movement
 
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
@@ -225,10 +229,9 @@ void TestNode::run()
 }
 
 //convert the gazebo transformation between world and base_link into a tf
-void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg)
-{
+void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg) {
   int index = -1;
-  for (int i = 0; i < msg->name.size(); i++) {
+  for (uint64_t i = 0; i < msg->name.size(); i++) {
     if (msg->name[i] == "ModularBot") {
       index = i;
       break;
@@ -246,57 +249,68 @@ void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg
   transform.setRotation(tf::Quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w));
 
   static tf::TransformBroadcaster br;
+  ROS_INFO("INCOMING TRANSFORM");
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "base_link"));
 }
 
 
 // Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
-void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg){
-    
-    visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
-    visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
-    _dummy_human_meas.clear();
-    //int id = 0;
-    for(const geometry_msgs::Point& point: msg->data)
-    {
-        //TODO: Transform from world to base_link
-        geometry_msgs::TransformStamped transformation;
-        try
-        {
-            transformation =  _tfBuffer.lookupTransform("base_link", "world", msg->header.stamp, ros::Duration(0.001));
-        }catch(tf2::LookupException){
-            ROS_ERROR("NO TRANSFORM FOUND");
-        }
-        catch(tf2::ExtrapolationException){
-            ROS_ERROR("NO TRANSFORM FOUND");
-        } 
-        
-        //geometry_msgs::PoseStamped point_global;
-        //point_global.pose.position = point;
-        //geometry_msgs::PoseStamped point_local = _tfBuffer.transform(point_global, "base_link", ros::Duration(0.2));
-        //_dummy_human_meas.emplace_back(reach_lib::Point(point_local.x, point_local.y, point_local.z));
-        
-        //TODO: fix by including rotation (proper transform)
-        geometry_msgs::Point pointLocal;
-        pointLocal.x = point.x + transformation.transform.translation.x;
-        pointLocal.y = point.y + transformation.transform.translation.y;
-        pointLocal.z = point.z + transformation.transform.translation.z;
-        _dummy_human_meas.emplace_back(reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg) {
+  // get the robot position
+  geometry_msgs::TransformStamped transformation;
+  try {
+    transformation = _tfBuffer.lookupTransform(
+        "base_link", "world", msg->header.stamp, ros::Duration(0.003));
+  } catch (tf2::LookupException const&) {
+    ROS_WARN("NO TRANSFORM FOUND (Lookup failed)");
+    return;
+  } catch (tf2::ExtrapolationException const&) {
+    ROS_WARN("NO TRANSFORM FOUND (ExtrapolationException)");
+    return;
+  }
 
-        //_dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y, point.z));
-    }
-        //visualization of Robot and Human Capsules
-    
-    std::vector<std::vector<double>> humanCapsules =  _shield.getHumanReachCapsules(1);
-    createPoints(humanMarkerArray, 3*humanCapsules.size(), visualization_msgs::Marker::CYLINDER, 2);
-    createCapsules(humanMarkerArray, humanCapsules);
+  // visualize the robot and human
+  visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
+  visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
+  _dummy_human_meas.clear();
+  for(const geometry_msgs::Point &point: msg->data) {
+    // TODO: Transform from world to base_link
 
-    std::vector<std::vector<double>> robotReachCapsules =  _shield.getRobotReachCapsules();
-    createPoints(robotMarkerArray, 3*robotReachCapsules.size(), visualization_msgs::Marker::CYLINDER, 0);
-    createCapsules(robotMarkerArray, robotReachCapsules);
+    // geometry_msgs::PoseStamped point_global;
+    // point_global.pose.position = point;
+    // geometry_msgs::PoseStamped point_local =
+    // _tfBuffer.transform(point_global, "base_link", ros::Duration(0.2));
+    //_dummy_human_meas.emplace_back(reach_lib::Point(point_local.x,
+    //point_local.y, point_local.z));
 
-    _human_marker_pub.publish(humanMarkerArray);
-    _robot_marker_pub.publish(robotMarkerArray);
+    // TODO: fix by including rotation (proper transform)
+    geometry_msgs::Point pointLocal;
+    // ROS_ERROR("C=");
+    pointLocal.x = point.x + transformation.transform.translation.x;
+    pointLocal.y = point.y + transformation.transform.translation.y;
+    pointLocal.z = point.z + transformation.transform.translation.z;
+    _dummy_human_meas.emplace_back(
+        reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+
+    //_dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y,
+    //point.z));
+  }
+  // visualization of Robot and Human Capsules
+
+  std::vector<std::vector<double>> humanCapsules =
+      _shield.getHumanReachCapsules(1);
+  createPoints(humanMarkerArray, 3 * humanCapsules.size(),
+               visualization_msgs::Marker::CYLINDER, 2);
+  createCapsules(humanMarkerArray, humanCapsules);
+
+  std::vector<std::vector<double>> robotReachCapsules =
+      _shield.getRobotReachCapsules();
+  createPoints(robotMarkerArray, 3 * robotReachCapsules.size(),
+               visualization_msgs::Marker::CYLINDER, 0);
+  createCapsules(robotMarkerArray, robotReachCapsules);
+
+  _human_marker_pub.publish(humanMarkerArray);
+  _robot_marker_pub.publish(robotMarkerArray);
 }
 
 void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
