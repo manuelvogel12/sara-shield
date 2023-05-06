@@ -273,30 +273,20 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
   visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
   visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
   _dummy_human_meas.clear();
+  
+  //get all human measurment points and transform them to robot coordinate system
   for(const geometry_msgs::Point &point: msg->data) {
-    // TODO: Transform from world to base_link
 
-    // geometry_msgs::PoseStamped point_global;
-    // point_global.pose.position = point;
-    // geometry_msgs::PoseStamped point_local =
-    // _tfBuffer.transform(point_global, "base_link", ros::Duration(0.2));
-    //_dummy_human_meas.emplace_back(reach_lib::Point(point_local.x,
-    //point_local.y, point_local.z));
-
-    // TODO: fix by including rotation (proper transform)
-    geometry_msgs::Point pointLocal;
-    // ROS_ERROR("C=");
-    pointLocal.x = point.x + transformation.transform.translation.x;
-    pointLocal.y = point.y + transformation.transform.translation.y;
-    pointLocal.z = point.z + transformation.transform.translation.z;
+    geometry_msgs::PointStamped pointStamped;
+    geometry_msgs::PointStamped pointStampedLocal;
+    pointStamped.point = point;    
+    tf2::doTransform(pointStamped,pointStampedLocal, transformation);
+    geometry_msgs::Point pointLocal = pointStampedLocal.point;
     _dummy_human_meas.emplace_back(
         reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
-
-    //_dummy_human_meas.emplace_back(reach_lib::Point(point.x, point.y,
-    //point.z));
   }
-  // visualization of Robot and Human Capsules
 
+  // visualization of Robot and Human Capsules
   std::vector<std::vector<double>> humanCapsules =
       _shield.getHumanReachCapsules(1);
   createPoints(humanMarkerArray, 3 * humanCapsules.size(),
