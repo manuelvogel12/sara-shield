@@ -1,29 +1,31 @@
- 	
+
 #ifndef TESTNODE_H
 #define TESTNODE_H
 
-#include <xbot2/xbot2.h>
-#include <ros/ros.h>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf/transform_broadcaster.h>
-#include <gazebo_msgs/ModelStates.h>
-
-
-#include <vector>
+#include "reach_lib.hpp"
 #include "safety_shield/safety_shield.h"
 #include "safety_shield/human_reach.h"
 #include "safety_shield/robot_reach.h"
 #include "safety_shield/verify.h"
 #include "safety_shield/long_term_traj.h"
 #include "safety_shield/motion.h"
-#include "reach_lib.hpp"
+
+#include <xbot2/xbot2.h>
+#include <ros/ros.h>
+
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf/transform_broadcaster.h>
+#include <gazebo_msgs/ModelStates.h>
 #include "visualization_msgs/MarkerArray.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "geometry_msgs/Point.h"
-#include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Pose.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "custom_robot_msgs/PositionsHeadered.h"
+
+#include <vector>
 
 using namespace XBot;
 class TestNode : public ControlPlugin
