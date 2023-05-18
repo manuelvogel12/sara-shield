@@ -1,7 +1,6 @@
 #include "safety_shield/testnode.h"
 
 #include <string>
-#include <vector>
 #include <chrono>
 #include <type_traits>
 #include <iostream>
@@ -54,8 +53,8 @@ void TestNode::on_start()
     //std::string trajectory_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml");
     //std::string robot_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml");
     //std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
-    std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml";
-    std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml";
+    std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
+    std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
     std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml";
     //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml");
 
@@ -85,9 +84,9 @@ void TestNode::on_start()
 
     // Dummy human measurement
 
-    _dummy_human_meas.resize(21);
+    _human_meas.resize(21);
     for (int i=0; i<21; i++) {
-      _dummy_human_meas[i] = reach_lib::Point(400.0, 400.0, 0.0);
+      _human_meas[i] = reach_lib::Point(400.0, 400.0, 0.0);
     }
 
 
@@ -112,7 +111,7 @@ void TestNode::run()
     //	std::vector<reach_lib::Point> measures = {reach_lib::Point(0.0, 0.0, 0.0)};
     //	_shield.humanMeasurement(measures, t) ;
     //}else{
-        _shield.humanMeasurement(_dummy_human_meas, t);
+        _shield.humanMeasurement(_human_meas, t);
     //}
     
 
@@ -272,7 +271,7 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
   // visualize the robot and human
   visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
   visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
-  _dummy_human_meas.clear();
+  _human_meas.clear();
   
   //get all human measurment points and transform them to robot coordinate system
   for(const geometry_msgs::Point &point: msg->data) {
@@ -282,7 +281,7 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
     pointStamped.point = point;    
     tf2::doTransform(pointStamped,pointStampedLocal, transformation);
     geometry_msgs::Point pointLocal = pointStampedLocal.point;
-    _dummy_human_meas.emplace_back(
+    _human_meas.emplace_back(
         reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
   }
 
