@@ -35,3 +35,28 @@ python setup.py install
 ```
 pytest safety_shield/tests
 ```
+
+# Run Safety-shield with Xbot2
+Start Ros with
+```
+roscore
+```
+Run the concert gazebo project with
+```
+cd ~/concert_ws
+source ./src/safe_rl_manipulators/src/catkin_ws/devel/setup.bash
+source setup.bash
+
+mon launch concert_gazebo concert.launch realsense:=true velodyne:=true
+```
+**After** Gazebo runs, start Xbot2-Gui with
+```
+xbot2-gui
+```
+This should open a large window with status "Running" in the top left corner. If it opens a small window with the status "Inactive" instead, close and rerun the command above.
+
+**Open Rviz** for visualization (with the command ```rviz```) and **start the xbot plugin** in the xbot2 gui. The visualization topics of sara-shield are named ```/human_joint_marker_array``` and ```/robot_joint_marker_array``` and can be visualized by adding them in rviz.
+
+## Notes
+1. Sara-shield should always be built in *Release* mode, since the timesteps can take too long otherwise, resulting in crashes (```safety limit violation detected ...```).
+2. The plugin is not supposed to be paused and restarted. Instead it is recommended to stop gazebo and start it again. (Rviz and Xbot2-gui can stay open)
