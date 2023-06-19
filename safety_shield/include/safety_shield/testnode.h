@@ -154,7 +154,7 @@ private:
 
     /**
      * @brief create points for the visualization of the robot and human in rviz
-     * @param markers 
+     * @param[out] markers the created visualization markers 
      * @param nb_points_to_add number of points to visualize
      * @param shape_type The marker shape (e.g. cylinder)
      * @param color_type Color of the points (0: robot, 1: human cylinder, 2: human reach)
@@ -181,7 +181,7 @@ private:
     /**
      * @brief create a visualization cylinder
      * @param p1 endpoint 1
-     * @param p2 endpoint 2
+     * @param p2 end point 2
      * @param radius thickness of the cylinder
      * @param stamp timestamp
      * @param[out] marker output marker

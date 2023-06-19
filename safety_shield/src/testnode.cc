@@ -26,7 +26,6 @@ bool TestNode::on_initialize()
 }
 
 
-
 void TestNode::on_start()
 {
     // ros: subsribe to topics and advertise topics
@@ -107,128 +106,78 @@ void TestNode::run()
     auto st_elapsed = chrono::steady_clock::now() - _st_time;
     double t = std::chrono::duration<double>(st_elapsed).count();
 
-    //if(t > 5){
-    //	std::vector<reach_lib::Point> measures = {reach_lib::Point(0.0, 0.0, 0.0)};
-    //	_shield.humanMeasurement(measures, t) ;
-    //}else{
-        _shield.humanMeasurement(_human_meas, t);
-    //}
+    _shield.humanMeasurement(_human_meas, t);
     
-
+    // measure time since start of plugin
     st_elapsed = chrono::steady_clock::now() - _st_time;
     t = std::chrono::duration<double>(st_elapsed).count();
 
-    //Dummy movement
-
+    //Movement
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
     //     std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     //     _shield.newLongTermTrajectory(qpos, qvel);
     // }
     if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
-        std::vector<double> qpos{0.02*t, 0.02*t, -0.02*t, -0.02*t, -0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
+        std::vector<double> qpos{0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
         std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         _shield.newLongTermTrajectory(qpos, qvel);
     }
+    //if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
+    //    std::vector<double> qpos{0.02*t, 0.02*t, -0.02*t, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    //    std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    //    _shield.newLongTermTrajectory(qpos, qvel);
+    //}
 
-    //debug: measure performance
+
+    //DEBUG: measure performance
     auto time_before = std::chrono::system_clock::now();
+    
+    //Perform a sara shield update step
     safety_shield::Motion next_motion = _shield.step(t);
+    
     if(!_shield.getSafety()){
       jerror("NOT SAFE");
     }
     //else{
     //  jwarn("SAFE");
     //}
+
+    //DEBUG: print the time the update step took
     double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
     std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
 
-    //std::cout<< "Angles"<< std::endl;
-    //std::vector<double> q = next_motion.getAngle();
-    //for(double& angle: q)
-    //    std::cout << angle << std::endl;
-    //std::cout<< "Velo"<< std::endl;
-    //std::vector<double> v = next_motion.getVelocity();
-    //for(double& velocity: v)
-    //    std::cout << velocity << std::endl;
 
     std::vector<double> q = next_motion.getAngle();
     //change size of q to 13
     for(int i = q.size(); i< 13; i++)
     	q.insert(q.begin(), 0);
 
-    //TODO: remove DEBUG
+    //DEBUG: print angles of ronot
     std::cout<<"q at time t="<<t<<": ";
     for(double d: q){
         std::cout<<d<<",";
     }
     std::cout<<std::endl;
 
+    //transform float array to Eigen Vector
     //Eigen::VectorXd _q = Eigen::VectorXd::Zero(13);
     Eigen::Map<Eigen::VectorXd> _q(&q[0], q.size()); 
-    //_q *= 1.0;
+    
+    // Move the robot
     _robot->setPositionReference(_q);
     _robot->move();
 
-    _robot->getPositionReference(_q_obs);
+    //_robot->getPositionReference(_q_obs);
     //std::cout<<"observed: \n "<<_q_obs<<std::endl;
     //std::cout<<"safe:" <<_shield.getSafety()<<std::endl;
 
-
-    //double t2 = std::chrono::duration<double>(elapsed_2).count();
-    //double t3 = std::chrono::duration<double>(elapsed_3).count();
-    //double t4 = std::chrono::duration<double>(elapsed_4).count();
-    //double t5 = std::chrono::duration<double>(elapsed_5).count();
-    //double t6 = std::chrono::duration<double>(elapsed_6).count();
-    //double t7 = std::chrono::duration<double>(elapsed_7).count();
-    //std::cout<<"2: "<<t2<<" |3: "<<t3<<" |4: "<<t4<<" |5: "<<t5	<<" |6: "<<t6<<" |7: "<<t7<<std::endl;		
-
-    //_shield.reset(true, init_x, init_y, init_z, init_roll, init_pitch, init_yaw, init_qpos, t);
-      
-    
-    // define a simplistic linear trajectory
-    //double tau = _fake_time/_homing_time;
-
-    // quintic poly 6t^5 - 15t^4 + 10t^3
-    //double alpha = ((6*tau - 15)*tau + 10)*tau*tau*tau;
-
-    // interpolate
-    //_q_ref = _q_start + alpha * (_q_home - _q_start);
-
-    
-    //_q_offset << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
-    //Eigen::VectorXd a2 = Eigen::VectorXd::Random(13);
-    //a2 *= 0.0001; 
-    //a2 += _q_start;
-    //jerror("Current Position '{}' --- '{}' \n",_q_start, a2);
-    //_v_start << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
-    //_v_start = _v_start + _v_new;
-
-   // _robot->sense();
-    //_robot->getPositionReference(_q_start);
-   
-    
-    // send reference
-    //_robot->setPositionReference(a2);
-    
-    //_robot->move();
-    /*
-    // if trajectory ended, we stop ourselves
-    //if(tau >= 1.0)
-    //{
-    //    stop();
-    //    return;
-    //}
-
-    // increment fake time
-    // note: getPeriodSec() returns the nominal period
-    //_fake_time += getPeriodSec();
-    */
     ros::spinOnce();
 }
 
 //convert the gazebo transformation between world and base_link into a tf
 void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg) {
+  // find the index of the robot transform in the list of transforms
   int index = -1;
   for (uint64_t i = 0; i < msg->name.size(); i++) {
     if (msg->name[i] == "ModularBot") {
@@ -242,11 +191,13 @@ void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg
     return;
   }
 
+  // make a tf transform out of the given gazebo transform
   tf::Transform transform;
   geometry_msgs::Pose pose = msg->pose[index];
   transform.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
   transform.setRotation(tf::Quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w));
 
+  //publish the transform
   static tf::TransformBroadcaster br;
   ROS_INFO("INCOMING TRANSFORM");
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "base_link"));
