@@ -1,0 +1,257 @@
+// -*- lsst-c++ -*/
+/**
+ * @file pedestrian_reacj.h
+ * @brief Defines the pedestrian reach class
+ * @version 0.1
+ * @copyright This file is part of SaRA-Shield.
+ * SaRA-Shield is free software: you can redistribute it and/or modify it under 
+ * the terms of the GNU General Public License as published by the Free Software Foundation, 
+ * either version 3 of the License, or (at your option) any later version.
+ * SaRA-Shield is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with SaRA-Shield. 
+ * If not, see <https://www.gnu.org/licenses/>. 
+ */
+
+
+#include <string>
+#include <vector>
+#include <map>
+#include <exception>
+#include <assert.h>
+
+//#include "spdlog/spdlog.h" 
+
+#include "reach_lib.hpp"
+
+
+#ifndef PEDESTRIAN_REACH_H
+#define PEDESTRIAN_REACH_H
+
+namespace safety_shield {
+
+/**
+ * @brief Class handling the reachability analysis of the pedestrian.
+ * 
+ * This class holds all three models (pos, vel, accel) of the pedestrian, 
+ * and handels incoming measurements.
+ */
+class PedestrianReach {
+ private:
+
+  /**
+   * @brief Last measured timestep.
+   */
+  double last_meas_timestep_ = -1;
+
+
+  /**
+   * @brief Center position measurements
+   */
+  reach_lib::Point center_pos_;
+
+  /**
+   * @brief Calculated velocities
+   */
+  reach_lib::Point center_vel_;
+
+  /** 
+   * @brief Map the entries of body links to their proximal and distal joint.
+   */
+  //std::map<std::string, reach_lib::jointPair> body_link_joints_;
+
+  /**
+   * @brief The object for calculating the position based reachable set.
+   */
+  reach_lib::Pedestrian pedestrian_p_;
+
+  /**
+   * @brief The object for calculating the velocity based reachable set.
+   */
+  reach_lib::PedestrianVel pedestrian_v_;
+
+  /** TODO
+   * @brief The object for calculating the acceleration based reachable set.
+   */
+  reach_lib::PedestrianAccel pedestrian_a_;
+
+  /**
+   * @brief We need two measurements for velocity calculation.
+   */
+  bool has_second_meas_ = false;
+
+  /**
+   * @brief Maximal positional measurement error
+   * 
+   */
+  double measurement_error_pos_;
+
+  /**
+   * @brief Maximal velocity measurement error
+   * 
+   */
+  double measurement_error_vel_;
+
+  /**
+   * @brief Delay in measurement processing pipeline
+   * 
+   */
+  double delay_;
+  
+public:
+  /**
+   * @brief Empty constructor
+   */
+  PedestrianReach() {}
+
+  /**
+   * @brief HumanReach constructor
+   * @param[in] measurement_error_pos Maximal positional measurement error
+   * @param[in] measurement_error_vel Maximal velocity measurement error
+   * @param[in] delay Delay in measurement processing pipeline
+   * @param[in] joint_pair_map Maps the proximal and distal joint to a body part identified by a string (key: Name of body part, value: Proximal and distal joint index)
+   * @param[in] thickness Defines the thickness of the body parts (key: Name of body part, value: Thickness of body part)
+   * @param[in] max_v The maximum velocity of the pedestrian
+   * @param[in] max_a The maximum acceleration of the pedestrian
+  */
+  PedestrianReach(
+      //std::map<std::string, reach_lib::jointPair>& body_link_joints, 
+      //const std::map<std::string, double>& thickness, 
+      double max_v, 
+      double max_a,
+      double measurement_error_pos, 
+      double measurement_error_vel, 
+      double delay);
+
+  /**
+   * @brief Destructor
+   */
+  ~PedestrianReach() {}
+
+  /**
+   * @brief Reset the human reach object.
+   * 
+   */
+  void reset();
+
+  /**
+   * @brief Update the joint measurements.
+   * @param[in] pedestrian_center_pos The center point of the human.
+   * @param[in] time The simulation time.
+   */
+  void measurement(const reach_lib::Point& pedestrian_center_pos, double time);
+
+  /**
+   * @brief Calculate reachability analysis for given breaking time.
+   * 
+   * Updates the values in human_p_, human_v_, human_a_.
+   * Get the values afterwards with the getter functions!
+   * 
+   * @param[in] t_command Current time
+   * @param[in] t_brake Time horizon of reachability analysis
+   */
+  void humanReachabilityAnalysis(double t_command, double t_brake);
+
+
+//////////////////////////////////////////////////////
+
+
+//TODO
+
+
+  // /**
+  //  * @brief Get the Articulated Pos capsules
+  //  * 
+  //  * @return reach_lib::ArticulatedPos capsules
+  //  */
+  // inline std::vector<reach_lib::Capsule> getArticulatedPosCapsules() {return reach_lib::get_capsules(human_p_);}
+
+  // /**
+  //  * @brief Get the Articulated Vel capsules
+  //  * 
+  //  * @return reach_lib::ArticulatedVel capsules
+  //  */
+  // inline std::vector<reach_lib::Capsule> getArticulatedVelCapsules() {return reach_lib::get_capsules(human_v_);}
+
+  // /**
+  //  * @brief Get the Articulated Accel capsules
+  //  * 
+  //  * @return reach_lib::ArticulatedAccel capsules
+  //  */
+  // inline std::vector<reach_lib::Capsule> getArticulatedAccelCapsules() {return reach_lib::get_capsules(human_a_);}
+
+  // /**
+  //  * @brief Get the All Capsules of pos, vel, and accel
+  //  * 
+  //  * @return std::vector<std::vector<reach_lib::Capsule>> 
+  //  */
+  // inline std::vector<std::vector<reach_lib::Capsule>> getAllCapsules() {
+  //   return {getArticulatedPosCapsules(), getArticulatedVelCapsules(), getArticulatedAccelCapsules()};
+  // }
+
+  /**
+   * @brief Get the Last Meas Timestep object
+   * 
+   * @return double 
+   */
+  inline double getLastMeasTimestep() {
+    return last_meas_timestep_;
+  }
+
+  // /**
+  //  * @brief Get the Joint Pos object
+  //  * 
+  //  * @return std::vector<reach_lib::Point> 
+  //  */
+  // inline std::vector<reach_lib::Point> getJointPos() {
+  //   return joint_pos_;
+  // }
+
+  // /**
+  //  * @brief Get the Joint Vel object
+  //  * 
+  //  * @return std::vector<reach_lib::Point> 
+  //  */
+  // inline std::vector<reach_lib::Point> getJointVel() {
+  //   return joint_vel_;
+  // }
+  
+  // /**
+  //  * @brief Get the Body Link Joints object
+  //  * 
+  //  * @return std::map<std::string, reach_lib::jointPair> 
+  //  */
+  // inline std::map<std::string, reach_lib::jointPair> getBodyLinkJoints() {
+  //   return body_link_joints_;
+  // }
+
+  /**
+   * @brief Get the Measurement Error Pos object
+   * 
+   * @return double 
+   */
+  inline double getMeasurementErrorPos() {
+    return measurement_error_pos_;
+  }
+
+  /**
+   * @brief Get the Measurement Error Vel object
+   * 
+   * @return double 
+   */
+  inline double getMeasurementErrorVel() {
+    return measurement_error_vel_;
+  }
+
+  /**
+   * @brief Get the Delay object
+   * 
+   * @return double 
+   */
+  inline double getDelay() {
+    return delay_;
+  }
+};
+} // namespace safety_shield
+#endif // PEDESTRIAN_REACH_H
