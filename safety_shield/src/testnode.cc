@@ -52,9 +52,9 @@ void TestNode::on_start()
     //std::string trajectory_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml");
     //std::string robot_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml");
     //std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
-    std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
-    std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
-    std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml";
+    std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
+    std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
+    std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml";
     //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml");
 
     double init_x = 0.0;
