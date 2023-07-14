@@ -15,13 +15,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ##Find XBOT2
 find_package(xbot2 REQUIRED)
 find_package(roscpp REQUIRED)
-find_package(catkin REQUIRED COMPONENTS 
-  roscpp 
-  tf2 
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  tf2
   tf2_ros
   geometry_msgs
   visualization_msgs
   gazebo_ros
+  custom_robot_msgs
 )
 
 
@@ -57,6 +58,7 @@ add_library(${PROJECT_NAME}
 add_subdirectory(external/pybind11)
 add_subdirectory(external/SaRA/ReachLib)
 add_subdirectory(external/LongTermPlanner)
+
 #add_subdirectory(external/spdlog)
 #add_subdirectory(external/yaml-cpp)
 
@@ -64,6 +66,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC external/pybind11/include
     PUBLIC external/ReachLib/include
     PUBLIC external/LongTermPlanner/include
+    PUBLIC /home/user/concert_ws/install/include
 #    PUBLIC external/spdlog/include
 #    PUBLIC external/yaml-cpp/include
 )
@@ -101,11 +104,11 @@ target_include_directories(testnode
   PUBLIC /opt/ros/noetic/lib
   )
 
-target_link_libraries(testnode 
+target_link_libraries(testnode
 	PUBLIC ${PROJECT_NAME}
 	PUBLIC XBotInterface::XBotInterface
 	PUBLIC ${roscpp_LIBRARIES}
-  PUBLIC ${catkin_LIBRARIES}
+	PUBLIC ${catkin_LIBRARIES}
   )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
