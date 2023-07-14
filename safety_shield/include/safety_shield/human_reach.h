@@ -69,6 +69,7 @@ class HumanReach {
    * @brief The object for calculating the position based reachable set.
    */
   reach_lib::ArticulatedPos human_p_;
+  //reach_lib::Pedestrian human_p_;
 
   /**
    * @brief The object for calculating the velocity based reachable set.
