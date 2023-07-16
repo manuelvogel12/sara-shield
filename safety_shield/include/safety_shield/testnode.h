@@ -187,7 +187,9 @@ private:
      * @param[out] marker output marker
      */
     void createCylinder(const geometry_msgs::Point& p1, const geometry_msgs::Point p2, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker);
-    
+
+
+    void visualizeRobotAndHuman();  
 };
 
 #endif //TESTNODE_H

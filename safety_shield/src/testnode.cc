@@ -63,7 +63,7 @@ void TestNode::on_start()
     double init_roll = 0.0;
     double init_pitch = 0.0;
     double init_yaw = 0.0;
-    std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     //YAML::Node robot_config = YAML::LoadFile(robot_config_file);
     //std::cout<<robot_config["robot_name"].as<std::string>()<<std::endl;
@@ -119,8 +119,8 @@ void TestNode::run()
     //     _shield.newLongTermTrajectory(qpos, qvel);
     // }
     if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
-        std::vector<double> qpos{0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
-        std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        std::vector<double> qpos{0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
+        std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         _shield.newLongTermTrajectory(qpos, qvel);
     }
     //if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
@@ -149,8 +149,8 @@ void TestNode::run()
 
 
     std::vector<double> q = next_motion.getAngle();
-    //change size of q to 13
-    for(int i = q.size(); i< 13; i++)
+    //change size of q to DOF + 8
+    for(int i = q.size(); i< 14; i++)
     	q.insert(q.begin(), 0);
 
     //DEBUG: print angles of ronot
@@ -163,6 +163,10 @@ void TestNode::run()
     //transform float array to Eigen Vector
     //Eigen::VectorXd _q = Eigen::VectorXd::Zero(13);
     Eigen::Map<Eigen::VectorXd> _q(&q[0], q.size()); 
+
+    //DEBUG: visualize in every timestep
+    visualizeRobotAndHuman();
+    
     
     // Move the robot
     _robot->setPositionReference(_q);
@@ -201,6 +205,28 @@ void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg
   static tf::TransformBroadcaster br;
   ROS_INFO("INCOMING TRANSFORM");
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "base_link"));
+}
+
+void TestNode::visualizeRobotAndHuman(){
+  // visualize the robot and human
+  visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
+  visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
+
+  // visualization of Robot and Human Capsules
+  std::vector<std::vector<double>> humanCapsules =_shield.getHumanReachCapsules(1);
+  createPoints(humanMarkerArray, 3 * humanCapsules.size(),
+               visualization_msgs::Marker::CYLINDER, 2);
+  createCapsules(humanMarkerArray, humanCapsules);
+
+  std::vector<std::vector<double>> robotReachCapsules =_shield.getRobotReachCapsules();
+  
+  createPoints(robotMarkerArray, 3 * robotReachCapsules.size(),
+               visualization_msgs::Marker::CYLINDER, 0);
+  createCapsules(robotMarkerArray, robotReachCapsules);
+
+  _human_marker_pub.publish(humanMarkerArray);
+  _robot_marker_pub.publish(robotMarkerArray);
+
 }
 
 
