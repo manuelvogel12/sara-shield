@@ -42,6 +42,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "custom_robot_msgs/PositionsHeadered.h"
 
+#include "custom_robot_msgs/Humans.h"
+
 #include <vector>
 
 using namespace XBot;
@@ -107,7 +109,7 @@ private:
    /**
     * @brief DEBUG, starting time of plugin
     */
-    chrono::steady_clock::time_point _st_time;
+    // chrono::steady_clock::time_point _st_time;
 
     std::vector<double> _goal_joint_pos;
     
@@ -147,7 +149,8 @@ private:
      * @brief Ros publisher to publish robot visualization
      */
     ros::Publisher _robot_marker_pub;
-    
+
+    ros::Publisher _static_human_pub;   
     
     /**
      * @brief Convert the gazebo transformation between world and base_link into a tf
@@ -159,7 +162,7 @@ private:
      * @brief Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
      * @param msg human pose msg
      */
-    void humanJointCallback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg);
+    void humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg);
 
     /**
      * @brief create points for the visualization of the robot and human in rviz
@@ -203,6 +206,8 @@ private:
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
 
     void safeFlagCallback(const std_msgs::Bool & msg);
+
+    void sendDemoHuman();
 };
 
 #endif //TESTNODE_H

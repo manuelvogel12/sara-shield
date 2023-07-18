@@ -1,11 +1,9 @@
 #include "safety_shield/testnode.h"
 
 #include <string>
-#include <chrono>
 #include <type_traits>
 #include <iostream>
 #include <fstream>
-#include "fmt/chrono.h"
 #include <cstdlib>
 
 
@@ -22,11 +20,12 @@ bool TestNode::on_initialize()
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/human_joint_pos", 100, &TestNode::humanJointCallback, this);
+    _human_joint_sub = nh.subscribe("/demo_human", 100, &TestNode::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
     _safe_flag_sub = nh.subscribe("/safe_flag", 100, & TestNode::safeFlagCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
+    _static_human_pub = nh.advertise<custom_robot_msgs::Humans>("/demo_human", 100);
     
     // we must explicitly set the control mode for our robot
     // in this case, we will only send positions
@@ -39,7 +38,6 @@ bool TestNode::on_initialize()
     //_robot->getVelocityReference(_v_start);
 
     bool activate_shield = true;
-    _st_time = chrono::steady_clock::now();
 
     double sample_time = getPeriodSec();
     //Note: executing directory is /tmp/something/ TODO: make path relative somehow
@@ -112,17 +110,9 @@ void TestNode::on_start()
 
 void TestNode::run()
 {
-
     _iteration++;
 
-    auto st_elapsed = chrono::steady_clock::now() - _st_time;
-    double t = std::chrono::duration<double>(st_elapsed).count();
-
-    _shield.humanMeasurement(_human_meas, t);
-    
-    // measure time since start of plugin
-    st_elapsed = chrono::steady_clock::now() - _st_time;
-    t = std::chrono::duration<double>(st_elapsed).count();
+    sendDemoHuman();
 
     //Movement
     // if (_iteration % 5 == 0) {
@@ -147,12 +137,8 @@ void TestNode::run()
     //    _shield.newLongTermTrajectory(qpos, qvel);
     //}
 
-
-    //DEBUG: measure performance
-    auto time_before = std::chrono::system_clock::now();
-    
     //Perform a sara shield update step
-    safety_shield::Motion next_motion = _shield.step(t);
+    safety_shield::Motion next_motion = _shield.step(ros::Time::now().toSec());
     
     if(!_shield.getSafety()){
       jerror("NOT SAFE");
@@ -162,8 +148,8 @@ void TestNode::run()
     //}
 
     //DEBUG: print the time the update step took
-    double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
-    std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
+    //double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
+    //std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
 
 
     std::vector<double> q = next_motion.getAngle();
@@ -172,7 +158,7 @@ void TestNode::run()
     	q.insert(q.begin(), 0);
 
     //DEBUG: print angles of ronot
-    std::cout<<"q at time t="<<t<<": ";
+    std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
     for(double d: q){
         std::cout<<d<<",";
     }
@@ -249,12 +235,12 @@ void TestNode::visualizeRobotAndHuman(){
 
 
 // Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
-void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg) {
+void TestNode::humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
   try {
     transformation = _tfBuffer.lookupTransform(
-        "base_link", "world", msg->header.stamp, ros::Duration(0.003));
+        "base_link", msg->header.frame_id, msg->header.stamp, ros::Duration(0.003));
   } catch (tf2::LookupException const&) {
     ROS_WARN("NO TRANSFORM FOUND (Lookup failed)");
     return;
@@ -269,16 +255,23 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
   _human_meas.clear();
   
   //get all human measurment points and transform them to robot coordinate system
-  for(const geometry_msgs::Point &point: msg->data) {
-
-    geometry_msgs::PointStamped pointStamped;
-    geometry_msgs::PointStamped pointStampedLocal;
-    pointStamped.point = point;    
-    tf2::doTransform(pointStamped,pointStampedLocal, transformation);
-    geometry_msgs::Point pointLocal = pointStampedLocal.point;
-    _human_meas.emplace_back(
-        reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+  if(msg->humans.size() > 0)
+  {
+    const custom_robot_msgs::Human3D &human = msg->humans[0];
+    for(const custom_robot_msgs::Keypoint3D &keypoint:human.skeleton_3d.keypoints)
+    {
+      geometry_msgs::PointStamped pointStamped;
+      geometry_msgs::PointStamped pointStampedLocal;
+      pointStamped.point = keypoint.pose.position;    
+      tf2::doTransform(pointStamped, pointStampedLocal, transformation);
+      geometry_msgs::Point pointLocal = pointStampedLocal.point;
+      
+      _human_meas.emplace_back(
+          reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+      }
   }
+
+  _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
 
   // visualization of Robot and Human Capsules
   std::vector<std::vector<double>> humanCapsules =
@@ -295,6 +288,88 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
 
   _human_marker_pub.publish(humanMarkerArray);
   _robot_marker_pub.publish(robotMarkerArray);
+}
+
+void TestNode::sendDemoHuman()
+{
+  custom_robot_msgs::Skeleton3D skeleton;
+
+  for(int i = 0; i < 30; i++){
+    custom_robot_msgs::Keypoint3D keyPoint;
+    keyPoint.pose.position.x = 10.0;
+    keyPoint.pose.position.y = 10.0;
+    keyPoint.pose.position.z = 0.3;
+    skeleton.keypoints[i] = keyPoint;
+  }
+    // Pelv
+  skeleton.keypoints[0].pose.position.x = 1.0;
+  skeleton.keypoints[0].pose.position.y = 0.0;
+  skeleton.keypoints[0].pose.position.z = 0.3;
+
+      // Neck
+  skeleton.keypoints[12].pose.position.x = 1.0;
+  skeleton.keypoints[12].pose.position.y = 0.0;
+  skeleton.keypoints[12].pose.position.z = 1.0;
+
+        // Head
+  skeleton.keypoints[15].pose.position.x = 1.0;
+  skeleton.keypoints[15].pose.position.y = 0.0;
+  skeleton.keypoints[15].pose.position.z = 1.2;
+
+        // Left shoulder
+  skeleton.keypoints[16].pose.position.x = 1.01;
+  skeleton.keypoints[16].pose.position.y = 0.26;
+  skeleton.keypoints[16].pose.position.z = 0.95;
+
+        // Rigth Shoulder
+  skeleton.keypoints[17].pose.position.x = 1.0;
+  skeleton.keypoints[17].pose.position.y = -0.26;
+  skeleton.keypoints[17].pose.position.z = 0.95;
+
+
+        // Left elbow
+  skeleton.keypoints[18].pose.position.x = 1.0;
+  skeleton.keypoints[18].pose.position.y = 0.27;
+  skeleton.keypoints[18].pose.position.z = 0.65;
+
+        // Right Elbow
+  skeleton.keypoints[19].pose.position.x = 1.0;
+  skeleton.keypoints[19].pose.position.y = -0.27;
+  skeleton.keypoints[19].pose.position.z = 0.65;
+
+        // Left Wrist
+  skeleton.keypoints[20].pose.position.x = 1.0;
+  skeleton.keypoints[20].pose.position.y = 0.28;
+  skeleton.keypoints[20].pose.position.z = 0.3;
+
+
+        // Right Wrist
+  skeleton.keypoints[21].pose.position.x = 1.0;
+  skeleton.keypoints[21].pose.position.y = -0.28;
+  skeleton.keypoints[21].pose.position.z = 0.3;
+
+        // Left Hand
+  skeleton.keypoints[22].pose.position.x = 1.0;
+  skeleton.keypoints[22].pose.position.y = 0.29;
+  skeleton.keypoints[22].pose.position.z = 0.2;
+
+          // Right Hand
+  skeleton.keypoints[23].pose.position.x = 1.0;
+  skeleton.keypoints[23].pose.position.y = -0.29;
+  skeleton.keypoints[23].pose.position.z = 0.2;
+
+  
+  custom_robot_msgs::Human3D human;
+  human.skeleton_3d = skeleton;
+
+  custom_robot_msgs::Humans humans;
+  humans.humans.push_back(human);
+  
+  humans.header.frame_id = "base_link";
+  humans.header.stamp = ros::Time::now();
+
+  std::cout<<"SEND HUMAN"<<std::endl;
+  _static_human_pub.publish(humans);
 }
 
 void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
