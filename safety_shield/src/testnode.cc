@@ -29,11 +29,12 @@ void TestNode::on_start()
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/human_joint_pos", 100, &TestNode::humanJointCallback, this);
+    _human_joint_sub = nh.subscribe("/demo_human", 100, &TestNode::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
     _safe_flag_sub = nh.subscribe("/safe_flag", 100, & TestNode::safeFlagCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
+    _static_human_pub = nh.advertise<custom_robot_msgs::Humans>("/demo_human", 100);
     
     // we must explicitly set the control mode for our robot
     // in this case, we will only send positions
@@ -100,6 +101,9 @@ void TestNode::on_start()
 void TestNode::run()
 {
     _iteration++;
+
+    sendDemoHuman();
+    
     //Movement
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
@@ -221,12 +225,12 @@ void TestNode::visualizeRobotAndHuman(){
 
 
 // Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
-void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedConstPtr& msg) {
+void TestNode::humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
   try {
     transformation = _tfBuffer.lookupTransform(
-        "base_link", "world", msg->header.stamp, ros::Duration(0.003));
+        "base_link", msg->header.frame_id, msg->header.stamp, ros::Duration(0.003));
   } catch (tf2::LookupException const&) {
     ROS_WARN("NO TRANSFORM FOUND (Lookup failed)");
     return;
@@ -241,15 +245,20 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
   _human_meas.clear();
   
   //get all human measurment points and transform them to robot coordinate system
-  for(const geometry_msgs::Point &point: msg->data) {
-
-    geometry_msgs::PointStamped pointStamped;
-    geometry_msgs::PointStamped pointStampedLocal;
-    pointStamped.point = point;    
-    tf2::doTransform(pointStamped,pointStampedLocal, transformation);
-    geometry_msgs::Point pointLocal = pointStampedLocal.point;
-    _human_meas.emplace_back(
-        reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+  if(msg->humans.size() > 0)
+  {
+    const custom_robot_msgs::Human3D &human = msg->humans[0];
+    for(const custom_robot_msgs::Keypoint3D &keypoint:human.skeleton_3d.keypoints)
+    {
+      geometry_msgs::PointStamped pointStamped;
+      geometry_msgs::PointStamped pointStampedLocal;
+      pointStamped.point = keypoint.pose.position;    
+      tf2::doTransform(pointStamped, pointStampedLocal, transformation);
+      geometry_msgs::Point pointLocal = pointStampedLocal.point;
+      
+      _human_meas.emplace_back(
+          reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+      }
   }
 
   _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
@@ -269,6 +278,66 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
 
   _human_marker_pub.publish(humanMarkerArray);
   _robot_marker_pub.publish(robotMarkerArray);
+}
+
+void TestNode::sendDemoHuman()
+{
+  custom_robot_msgs::Skeleton3D skeleton;
+
+  for(int i = 0; i < 30; i++){
+    custom_robot_msgs::Keypoint3D keyPoint;
+    keyPoint.pose.position.x = 1.0;
+    keyPoint.pose.position.y = 0.0;
+    keyPoint.pose.position.z = 1.0;
+    skeleton.keypoints[i] = keyPoint;
+  }
+  // Left leg
+  custom_robot_msgs::Keypoint3D leftLeg;
+  leftLeg.pose.position.x = 1.0;
+  leftLeg.pose.position.y = 0.5;
+  leftLeg.pose.position.z = 0.0;
+  skeleton.keypoints[12] = leftLeg;
+  
+  // Right leg
+  custom_robot_msgs::Keypoint3D rightLeg;
+  rightLeg.pose.position.x = 1.0;
+  rightLeg.pose.position.y = -0.5;
+  rightLeg.pose.position.z = 0.0;
+  skeleton.keypoints[11] = rightLeg;
+  
+    // Head
+  custom_robot_msgs::Keypoint3D head;
+  head.pose.position.x = 1.0;
+  head.pose.position.y = 0.0;
+  head.pose.position.z = 1.8;
+  skeleton.keypoints[16] = head;
+  
+  // left arm
+  custom_robot_msgs::Keypoint3D leftArm;
+  leftArm.pose.position.x = 0.7;
+  leftArm.pose.position.y = 0.0;
+  leftArm.pose.position.z = 1.0;
+  skeleton.keypoints[24] = leftArm;
+  
+    // right arm
+  custom_robot_msgs::Keypoint3D rightArm;
+  rightArm.pose.position.x = 0.7;
+  rightArm.pose.position.y = 0.0;
+  rightArm.pose.position.z = 1.0;
+  skeleton.keypoints[24] = rightArm;
+  
+  
+  
+  custom_robot_msgs::Human3D human;
+  human.skeleton_3d = skeleton;
+
+  custom_robot_msgs::Humans humans;
+  humans.humans.push_back(human);
+  
+  humans.header.frame_id = "base_link";
+
+  std::cout<<"SEND HUMAN"<<std::endl;
+  _static_human_pub.publish(humans);
 }
 
 void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
