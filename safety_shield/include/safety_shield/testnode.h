@@ -38,6 +38,7 @@
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Pose.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Bool.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "custom_robot_msgs/PositionsHeadered.h"
 
@@ -135,6 +136,8 @@ private:
     
     ros::Subscriber _robot_goal_pos_sub;
 
+    ros::Subscriber _safe_flag_sub;
+
     /**
      * @brief Ros publisher to publish human position visualization
      */
@@ -198,6 +201,8 @@ private:
     void visualizeRobotAndHuman();  
 
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
+
+    void safeFlagCallback(const std_msgs::Bool & msg);
 };
 
 #endif //TESTNODE_H

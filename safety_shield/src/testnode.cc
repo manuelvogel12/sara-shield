@@ -33,6 +33,7 @@ void TestNode::on_start()
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
     _human_joint_sub = nh.subscribe("/human_joint_pos", 100, &TestNode::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
+    _safe_flag_sub = nh.subscribe("/safe_flag", 100, & TestNode::safeFlagCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
     
@@ -172,7 +173,7 @@ void TestNode::run()
     Eigen::Map<Eigen::VectorXd> _q(&q[0], q.size()); 
 
     //DEBUG: visualize in every timestep
-    visualizeRobotAndHuman();
+    //visualizeRobotAndHuman();
     
     
     // Move the robot
@@ -297,6 +298,11 @@ void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
 }
 
 
+void TestNode::safeFlagCallback(const std_msgs::Bool & msg){
+  _shield.setSafeOverride(msg.data);
+}
+
+
 void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
     int color_type) {
   int prev_size = markers.markers.size();
@@ -406,7 +412,6 @@ void TestNode::createCylinder(const geometry_msgs::Point& p1, const geometry_msg
   }
   marker.header.stamp = stamp;
 }
-
 
 XBOT2_REGISTER_PLUGIN(TestNode, testnode)
 

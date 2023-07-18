@@ -268,6 +268,8 @@ class SafetyShield {
    */
   long_term_planner::LongTermPlanner ltp_;
 
+  bool safe_override_;
+
 protected:
   /**
    * @brief Calculate max acceleration and jerk based on previous velocity
@@ -559,6 +561,10 @@ protected:
 
   inline bool getSafety() {
     return is_safe_;
+  }
+
+  inline void setSafeOverride(bool value){
+    safe_override_ = value;
   }
 };
 } // namespace safety_shield
