@@ -54,8 +54,8 @@ void TestNode::on_start()
     //std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
     std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
     std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
-    std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml";
-    //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml");
+    std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/profactor_mocap.yaml";
+    //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml"); 
 
     double init_x = 0.0;
     double init_y = 0.0;
@@ -103,7 +103,7 @@ void TestNode::run()
     _iteration++;
 
     sendDemoHuman();
-    
+
     //Movement
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
@@ -286,47 +286,68 @@ void TestNode::sendDemoHuman()
 
   for(int i = 0; i < 30; i++){
     custom_robot_msgs::Keypoint3D keyPoint;
-    keyPoint.pose.position.x = 1.0;
-    keyPoint.pose.position.y = 0.0;
-    keyPoint.pose.position.z = 1.0;
+    keyPoint.pose.position.x = 10.0;
+    keyPoint.pose.position.y = 10.0;
+    keyPoint.pose.position.z = 0.3;
     skeleton.keypoints[i] = keyPoint;
   }
-  // Left leg
-  custom_robot_msgs::Keypoint3D leftLeg;
-  leftLeg.pose.position.x = 1.0;
-  leftLeg.pose.position.y = 0.5;
-  leftLeg.pose.position.z = 0.0;
-  skeleton.keypoints[12] = leftLeg;
-  
-  // Right leg
-  custom_robot_msgs::Keypoint3D rightLeg;
-  rightLeg.pose.position.x = 1.0;
-  rightLeg.pose.position.y = -0.5;
-  rightLeg.pose.position.z = 0.0;
-  skeleton.keypoints[11] = rightLeg;
-  
-    // Head
-  custom_robot_msgs::Keypoint3D head;
-  head.pose.position.x = 1.0;
-  head.pose.position.y = 0.0;
-  head.pose.position.z = 1.8;
-  skeleton.keypoints[16] = head;
-  
-  // left arm
-  custom_robot_msgs::Keypoint3D leftArm;
-  leftArm.pose.position.x = 0.7;
-  leftArm.pose.position.y = 0.0;
-  leftArm.pose.position.z = 1.0;
-  skeleton.keypoints[24] = leftArm;
-  
-    // right arm
-  custom_robot_msgs::Keypoint3D rightArm;
-  rightArm.pose.position.x = 0.7;
-  rightArm.pose.position.y = 0.0;
-  rightArm.pose.position.z = 1.0;
-  skeleton.keypoints[24] = rightArm;
-  
-  
+    // Pelv
+  skeleton.keypoints[0].pose.position.x = 1.0;
+  skeleton.keypoints[0].pose.position.y = 0.0;
+  skeleton.keypoints[0].pose.position.z = 0.3;
+
+      // Neck
+  skeleton.keypoints[12].pose.position.x = 1.0;
+  skeleton.keypoints[12].pose.position.y = 0.0;
+  skeleton.keypoints[12].pose.position.z = 1.0;
+
+        // Head
+  skeleton.keypoints[15].pose.position.x = 1.0;
+  skeleton.keypoints[15].pose.position.y = 0.0;
+  skeleton.keypoints[15].pose.position.z = 1.2;
+
+        // Left shoulder
+  skeleton.keypoints[16].pose.position.x = 1.01;
+  skeleton.keypoints[16].pose.position.y = 0.26;
+  skeleton.keypoints[16].pose.position.z = 0.95;
+
+        // Rigth Shoulder
+  skeleton.keypoints[17].pose.position.x = 1.0;
+  skeleton.keypoints[17].pose.position.y = -0.26;
+  skeleton.keypoints[17].pose.position.z = 0.95;
+
+
+        // Left elbow
+  skeleton.keypoints[18].pose.position.x = 1.0;
+  skeleton.keypoints[18].pose.position.y = 0.27;
+  skeleton.keypoints[18].pose.position.z = 0.65;
+
+        // Right Elbow
+  skeleton.keypoints[19].pose.position.x = 1.0;
+  skeleton.keypoints[19].pose.position.y = -0.27;
+  skeleton.keypoints[19].pose.position.z = 0.65;
+
+        // Left Wrist
+  skeleton.keypoints[20].pose.position.x = 1.0;
+  skeleton.keypoints[20].pose.position.y = 0.28;
+  skeleton.keypoints[20].pose.position.z = 0.3;
+
+
+        // Right Wrist
+  skeleton.keypoints[21].pose.position.x = 1.0;
+  skeleton.keypoints[21].pose.position.y = -0.28;
+  skeleton.keypoints[21].pose.position.z = 0.3;
+
+        // Left Hand
+  skeleton.keypoints[22].pose.position.x = 1.0;
+  skeleton.keypoints[22].pose.position.y = 0.29;
+  skeleton.keypoints[22].pose.position.z = 0.2;
+
+          // Right Hand
+  skeleton.keypoints[23].pose.position.x = 1.0;
+  skeleton.keypoints[23].pose.position.y = -0.29;
+  skeleton.keypoints[23].pose.position.z = 0.2;
+
   
   custom_robot_msgs::Human3D human;
   human.skeleton_3d = skeleton;
@@ -335,6 +356,7 @@ void TestNode::sendDemoHuman()
   humans.humans.push_back(human);
   
   humans.header.frame_id = "base_link";
+  humans.header.stamp = ros::Time::now();
 
   std::cout<<"SEND HUMAN"<<std::endl;
   _static_human_pub.publish(humans);
