@@ -107,13 +107,6 @@ void TestNode::run()
 
     auto st_elapsed = chrono::steady_clock::now() - _st_time;
     double t = std::chrono::duration<double>(st_elapsed).count();
-
-    _shield.humanMeasurement(_human_meas, t);
-    
-    // measure time since start of plugin
-    st_elapsed = chrono::steady_clock::now() - _st_time;
-    t = std::chrono::duration<double>(st_elapsed).count();
-
     //Movement
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
@@ -269,6 +262,10 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
     _human_meas.emplace_back(
         reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
   }
+
+  auto st_elapsed = msg->header.stamp.toSec() - _st_time;
+  double t = std::chrono::duration<double>(st_elapsed).count();
+  _shield.humanMeasurement(_human_meas, t);
 
   // visualization of Robot and Human Capsules
   std::vector<std::vector<double>> humanCapsules =
