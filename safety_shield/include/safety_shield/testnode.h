@@ -107,7 +107,7 @@ private:
    /**
     * @brief DEBUG, starting time of plugin
     */
-    chrono::steady_clock::time_point _st_time;
+    // chrono::steady_clock::time_point _st_time;
 
     std::vector<double> _goal_joint_pos;
     

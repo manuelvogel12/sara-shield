@@ -1,11 +1,9 @@
 #include "safety_shield/testnode.h"
 
 #include <string>
-#include <chrono>
 #include <type_traits>
 #include <iostream>
 #include <fstream>
-#include "fmt/chrono.h"
 #include <cstdlib>
 
 
@@ -47,7 +45,6 @@ void TestNode::on_start()
     //_robot->getVelocityReference(_v_start);
 
     bool activate_shield = true;
-    _st_time = chrono::steady_clock::now();
 
     double sample_time = 0.001;
     //Note: executing directory is /tmp/something/ TODO: make path relative somehow
@@ -102,11 +99,7 @@ void TestNode::on_start()
 
 void TestNode::run()
 {
-
     _iteration++;
-
-    auto st_elapsed = chrono::steady_clock::now() - _st_time;
-    double t = std::chrono::duration<double>(st_elapsed).count();
     //Movement
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
@@ -130,12 +123,8 @@ void TestNode::run()
     //    _shield.newLongTermTrajectory(qpos, qvel);
     //}
 
-
-    //DEBUG: measure performance
-    auto time_before = std::chrono::system_clock::now();
-    
     //Perform a sara shield update step
-    safety_shield::Motion next_motion = _shield.step(t);
+    safety_shield::Motion next_motion = _shield.step(ros::Time::now().toSec());
     
     if(!_shield.getSafety()){
       jerror("NOT SAFE");
@@ -145,8 +134,8 @@ void TestNode::run()
     //}
 
     //DEBUG: print the time the update step took
-    double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
-    std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
+    //double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
+    //std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
 
 
     std::vector<double> q = next_motion.getAngle();
@@ -155,7 +144,7 @@ void TestNode::run()
     	q.insert(q.begin(), 0);
 
     //DEBUG: print angles of ronot
-    std::cout<<"q at time t="<<t<<": ";
+    std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
     for(double d: q){
         std::cout<<d<<",";
     }
@@ -263,9 +252,7 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
         reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
   }
 
-  auto st_elapsed = msg->header.stamp.toSec() - _st_time;
-  double t = std::chrono::duration<double>(st_elapsed).count();
-  _shield.humanMeasurement(_human_meas, t);
+  _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
 
   // visualization of Robot and Human Capsules
   std::vector<std::vector<double>> humanCapsules =
