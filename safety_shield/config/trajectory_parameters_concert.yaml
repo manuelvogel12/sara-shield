@@ -5,6 +5,7 @@ max_s_stop: 0.2
 q_min_allowed: [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]
 q_max_allowed: [3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
 v_max_allowed: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+# v_max_allowed: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 a_max_allowed: [10, 10, 10, 10, 10, 10]
 j_max_allowed: [400, 400, 400, 400, 400, 400]
 # Maximum long-term planning acc / jerk

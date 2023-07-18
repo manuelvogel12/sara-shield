@@ -1,0 +1,50 @@
+XBotInterface:
+    urdf_path: $(rospack find robots)/concert/model/modularbot.urdf
+    srdf_path: $(rospack find robots)/concert/model/modularbot.srdf
+    joint_map_path: $(rospack find modularbot)/joint_map/ModularBot_joint_map.yaml
+
+ModelInterface:
+    model_type: RBDL
+    is_model_floating_base: true
+
+xbotcore_device_configs:
+    sim: $(rospack find modularbot)/config/hal/ModularBot_gz.yaml
+    dummy: $(rospack find modularbot)/config/hal/ModularBot_dummy.yaml
+    ec_imp: $(rospack find modularbot)/config/hal/ModularBot_ec_all.yaml
+    ec_idle: $(rospack find modularbot)/config/hal/ModularBot_ec_all.yaml
+    ec_pos: $(rospack find modularbot)/config/hal/ModularBot_ec_all.yaml
+
+
+# threads
+xbotcore_threads:
+    rt_main: {sched: fifo, prio: 60, period: 0.001, core_id: 2}
+    nrt_main: {sched: other, prio: 0, period: 0.001}
+    nrt_control: {sched: other, prio: 0, period: 0.005, core_id: 3}
+    nrt_saf: {sched: other, prio: 0, period: 0.005, core_id: 4}
+
+# plugins
+xbotcore_plugins:
+
+    ros_io: {thread: nrt_main, type: ros_io, params: {publish_tf: {type: bool, value: true}}}
+    ros_control: {thread: nrt_main, type: ros_control, params: {autostart: {type: bool, value: true}}}
+    ec_ros: {thread: nrt_main, type: ec_ros}
+
+    safety_shield:
+      type: testnode
+      thread: nrt_saf
+      params:
+        trajectory_config_file: 
+          type: file
+          value: $PWD/../safety_shield/config/trajectory_parameters_concert.yaml
+        robot_config_file: 
+          type: file
+          value: $PWD/../safety_shield/config/robot_parameters_concert.yaml
+        mocap_config_file: 
+          type: file
+          value: $PWD/../safety_shield/config/cmu_mocap_no_hand.yaml
+
+
+xbotcore_param:
+    /xbot/hal/joint_safety/filter_autostart: {value: true, type: bool}
+    /xbot/hal/joint_safety/filter_cutoff_hz: {value: 2.0, type: double}
+
