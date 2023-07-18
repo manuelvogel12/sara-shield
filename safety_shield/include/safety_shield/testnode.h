@@ -37,6 +37,7 @@
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Pose.h"
+#include "std_msgs/Float32MultiArray.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "custom_robot_msgs/PositionsHeadered.h"
 
@@ -106,7 +107,10 @@ private:
     * @brief DEBUG, starting time of plugin
     */
     chrono::steady_clock::time_point _st_time;
+
+    std::vector<double> _goal_joint_pos;
     
+    bool _new_goal = false;
     // ROS
 
     /**
@@ -129,6 +133,8 @@ private:
      */
     ros::Subscriber _model_state_sub;
     
+    ros::Subscriber _robot_goal_pos_sub;
+
     /**
      * @brief Ros publisher to publish human position visualization
      */
@@ -190,6 +196,8 @@ private:
 
 
     void visualizeRobotAndHuman();  
+
+    void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
 };
 
 #endif //TESTNODE_H

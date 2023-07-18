@@ -32,6 +32,7 @@ void TestNode::on_start()
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
     _human_joint_sub = nh.subscribe("/human_joint_pos", 100, &TestNode::humanJointCallback, this);
+    _robot_goal_pos_sub = nh.subscribe("/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
     
@@ -118,11 +119,17 @@ void TestNode::run()
     //     std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     //     _shield.newLongTermTrajectory(qpos, qvel);
     // }
-    if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
-        std::vector<double> qpos{0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
-        std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        _shield.newLongTermTrajectory(qpos, qvel);
+    if(_new_goal){
+      _new_goal = false;
+       std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+      _shield.newLongTermTrajectory(_goal_joint_pos, qvel);
     }
+    //if (_iteration % 1000 == 0) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
+    //    //std::vector<double> qpos{0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
+    //    std::vector<double> qpos{1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+    //    std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    //    _shield.newLongTermTrajectory(qpos, qvel);
+    //}
     //if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
     //    std::vector<double> qpos{0.02*t, 0.02*t, -0.02*t, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     //    std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -278,6 +285,17 @@ void TestNode::humanJointCallback(const custom_robot_msgs::PositionsHeaderedCons
   _human_marker_pub.publish(humanMarkerArray);
   _robot_marker_pub.publish(robotMarkerArray);
 }
+
+void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
+{
+  //float goal_joint_pos_array[14] = msg.data;
+  std::vector<double> a(msg.data.begin(), msg.data.end());
+  _goal_joint_pos = a;
+  _new_goal = true;
+  //_goal_joint_pos = static_cast<double>(goal_joint_pos_array);
+
+}
+
 
 void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
     int color_type) {
