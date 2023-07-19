@@ -49,7 +49,7 @@ xbotcore_plugins:
   
   safety_shield:
       type: testnode
-      thread: nrt_saf
+      thread: rt_main
       params:
         trajectory_config_file: 
           type: file

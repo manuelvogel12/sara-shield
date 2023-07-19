@@ -17,15 +17,6 @@ TestNode::TestNode(const Args& args)
 bool TestNode::on_initialize()
 {
     //init ROS
-    int argc = 0;
-    char **argv = NULL;
-    ros::init(argc, argv, "testnode");
-    return true;
-}
-
-
-void TestNode::on_start()
-{
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
@@ -38,7 +29,8 @@ void TestNode::on_start()
     
     // we must explicitly set the control mode for our robot
     // in this case, we will only send positions
-    _robot->setControlMode(ControlMode::Position() + ControlMode::Velocity());
+    setDefaultControlMode(ControlMode::Position() + ControlMode::Velocity());
+    // _robot->setControlMode(ControlMode::Position() + ControlMode::Velocity());
     
     // do some on-start initialization
     _robot->sense();
@@ -47,15 +39,19 @@ void TestNode::on_start()
 
     bool activate_shield = true;
 
-    double sample_time = 0.001;
+    double sample_time = getPeriodSec();
     //Note: executing directory is /tmp/something/ TODO: make path relative somehow
     //std::string trajectory_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml");
     //std::string robot_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml");
     //std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
-    std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
-    std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
-    std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/profactor_mocap.yaml";
-    //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml"); 
+    // std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
+    // std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
+    // std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml";
+    //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml");
+
+    std::string trajectory_config_file = getParamOrThrow<std::string>("~trajectory_config_file");
+    std::string robot_config_file = getParamOrThrow<std::string>("~robot_config_file");
+    std::string mocap_config_file = getParamOrThrow<std::string>("~mocap_config_file");
 
     double init_x = 0.0;
     double init_y = 0.0;
@@ -63,7 +59,7 @@ void TestNode::on_start()
     double init_roll = 0.0;
     double init_pitch = 0.0;
     double init_yaw = 0.0;
-    std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     //YAML::Node robot_config = YAML::LoadFile(robot_config_file);
     //std::cout<<robot_config["robot_name"].as<std::string>()<<std::endl;
@@ -88,15 +84,30 @@ void TestNode::on_start()
       _human_meas[i] = reach_lib::Point(400.0, 400.0, 0.0);
     }
 
+  return true;
 
     //auto start_time = std::chrono::system_clock::now();
     //double t = std::chrono::duration<double>(std::chrono::system_clock::now()-start_time).count();
     //spdlog::info("Debug started.");
+}
 
-    // we can switch to run
-    start_completed();
+
+void TestNode::on_start()
+{
+    _robot->sense();
+    
+    Eigen::VectorXd init_qpos_arm_eigen;
+    _robot->chain("chain_E").getJointPosition(init_qpos_arm_eigen);
+
+    std::cout << "starting from q = " << init_qpos_arm_eigen.transpose() << "\n";
+
+    std::vector<double> init_qpos_arm(init_qpos_arm_eigen.data(),
+                                      init_qpos_arm_eigen.data() + init_qpos_arm_eigen.size());
+
+    _shield.reset(true, 0, 0, 0, 0, 0, 0, init_qpos_arm, ros::Time::now().toSec());
 
 }
+
 
 void TestNode::run()
 {
