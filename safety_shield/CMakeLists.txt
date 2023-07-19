@@ -15,8 +15,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ##Find XBOT2
 find_package(xbot2 REQUIRED)
 find_package(roscpp REQUIRED)
-# TODO: USE THIS!!!!!!!!!
-# find_package(Eigen3 3.4 REQUIRED)
+find_package(Eigen3 3.4 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf2
@@ -30,9 +29,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Find catkin macros and libraries
 #find_package(Eigen3 3.4 REQUIRED NO_MODULE)
-INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
-# TODO: USE THIS!!!!!!!!!
-# INCLUDE_DIRECTORIES ( ${EIGEN3_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} )
+# INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
+INCLUDE_DIRECTORIES ( ${EIGEN3_INCLUDE_DIR})
 # Find Python
 # IF YOU DON'T WANT TO USE CONDA, DISABLE THESE THREE LINES
 #set(PYTHON_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python")
