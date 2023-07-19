@@ -20,9 +20,9 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include "global_library/global_library.h"
-#include "custom_robot_msgs/Visualization.h"
-#include "custom_robot_msgs/CapsuleArray.h"
-#include "custom_robot_msgs/StartGoalCapsuleArray.h"
+#include "concert_msgs/Visualization.h"
+#include "concert_msgs/CapsuleArray.h"
+#include "concert_msgs/StartGoalCapsuleArray.h"
 
 
 #ifndef RVIZ_MARKER_H
@@ -96,7 +96,7 @@ class RvizMarker{
    * 
    * @param capsules the robot's capsules
    */
-  void robotUpdate(custom_robot_msgs::CapsuleArray &capsules);
+  void robotUpdate(concert_msgs::CapsuleArray &capsules);
 
   /**
    * @brief Adds a given number of marker in the markers list
@@ -113,7 +113,7 @@ class RvizMarker{
    * @param[in] capsules         The new capsules
    */
   void createCapsules(visualization_msgs::MarkerArray& markers, 
-      const custom_robot_msgs::CapsuleArray* capsules);
+      const concert_msgs::CapsuleArray* capsules);
 
   /**
    * @brief Update a marker with a sphere
@@ -132,13 +132,13 @@ class RvizMarker{
    * @param[in] stamp            Time for header stamp
    * @param[in] marker           The marker to update
    */
-  void createCylinder(const custom_robot_msgs::Segment& seg, double radius, 
+  void createCylinder(const concert_msgs::Segment& seg, double radius, 
       const ros::Time& stamp, visualization_msgs::Marker& marker);
 
   /**
    * @brief Calculates the human reach capsule markers
    */
-  void human_reach_calc(const custom_robot_msgs::CapsuleArray* data, 
+  void human_reach_calc(const concert_msgs::CapsuleArray* data, 
       visualization_msgs::MarkerArray& human_reach_markers);
 
  public:
@@ -167,32 +167,32 @@ class RvizMarker{
   /**
    * @brief Reads the robot capsule data and updates and sends the rviz markers
    */
-  void robot_callback(const custom_robot_msgs::CapsuleArray* data);
+  void robot_callback(const concert_msgs::CapsuleArray* data);
 
   /**
    * @brief Reads the robot capsule data and updates and sends the rviz markers
    */
-  void advanced_robot_callback(const custom_robot_msgs::StartGoalCapsuleArray* data);
+  void advanced_robot_callback(const concert_msgs::StartGoalCapsuleArray* data);
 
   /**
    * @brief Reads the human cylinder polycapsule data and updates and sends the rviz markers
    */
-  void human_cylinder_callback(const custom_robot_msgs::PolycapsuleArray* data);
+  void human_cylinder_callback(const concert_msgs::PolycapsuleArray* data);
   
   /**
    * @brief Reads the human reach capsule data and updates and sends the rviz markers
    */
-  void human_reach_callback_p(const custom_robot_msgs::CapsuleArray* data);
+  void human_reach_callback_p(const concert_msgs::CapsuleArray* data);
 
   /**
    * @brief Reads the human reach capsule data and updates and sends the rviz markers
    */
-  void human_reach_callback_v(const custom_robot_msgs::CapsuleArray* data);
+  void human_reach_callback_v(const concert_msgs::CapsuleArray* data);
   
   /**
    * @brief Reads the human reach capsule data and updates and sends the rviz markers
    */
-  void human_reach_callback_a(const custom_robot_msgs::CapsuleArray* data);
+  void human_reach_callback_a(const concert_msgs::CapsuleArray* data);
   
 };
 } // namespace safety_shield

@@ -34,7 +34,7 @@ void TestNode::on_start()
     _safe_flag_sub = nh.subscribe("/safe_flag", 100, & TestNode::safeFlagCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
-    _static_human_pub = nh.advertise<custom_robot_msgs::Humans>("/demo_human", 100);
+    _static_human_pub = nh.advertise<concert_msgs::Humans>("/demo_human", 100);
     
     // we must explicitly set the control mode for our robot
     // in this case, we will only send positions
@@ -225,7 +225,7 @@ void TestNode::visualizeRobotAndHuman(){
 
 
 // Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
-void TestNode::humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg) {
+void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
   try {
@@ -247,8 +247,8 @@ void TestNode::humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg) 
   //get all human measurment points and transform them to robot coordinate system
   if(msg->humans.size() > 0)
   {
-    const custom_robot_msgs::Human3D &human = msg->humans[0];
-    for(const custom_robot_msgs::Keypoint3D &keypoint:human.skeleton_3d.keypoints)
+    const concert_msgs::Human3D &human = msg->humans[0];
+    for(const concert_msgs::Keypoint3D &keypoint:human.skeleton_3d.keypoints)
     {
       geometry_msgs::PointStamped pointStamped;
       geometry_msgs::PointStamped pointStampedLocal;
@@ -282,10 +282,10 @@ void TestNode::humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg) 
 
 void TestNode::sendDemoHuman()
 {
-  custom_robot_msgs::Skeleton3D skeleton;
+  concert_msgs::Skeleton3D skeleton;
 
   for(int i = 0; i < 30; i++){
-    custom_robot_msgs::Keypoint3D keyPoint;
+    concert_msgs::Keypoint3D keyPoint;
     keyPoint.pose.position.x = 10.0;
     keyPoint.pose.position.y = 10.0;
     keyPoint.pose.position.z = 0.3;
@@ -349,10 +349,10 @@ void TestNode::sendDemoHuman()
   skeleton.keypoints[23].pose.position.z = 0.2;
 
   
-  custom_robot_msgs::Human3D human;
+  concert_msgs::Human3D human;
   human.skeleton_3d = skeleton;
 
-  custom_robot_msgs::Humans humans;
+  concert_msgs::Humans humans;
   humans.humans.push_back(human);
   
   humans.header.frame_id = "base_link";

@@ -40,9 +40,9 @@
 #include "std_msgs/Float32MultiArray.h"
 #include "std_msgs/Bool.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
-#include "custom_robot_msgs/PositionsHeadered.h"
+// #include "concert_msgs/PositionsHeadered.h"
 
-#include "custom_robot_msgs/Humans.h"
+#include "concert_msgs/Humans.h"
 
 #include <vector>
 
@@ -162,7 +162,7 @@ private:
      * @brief Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
      * @param msg human pose msg
      */
-    void humanJointCallback(const custom_robot_msgs::HumansConstPtr& msg);
+    void humanJointCallback(const concert_msgs::HumansConstPtr& msg);
 
     /**
      * @brief create points for the visualization of the robot and human in rviz
