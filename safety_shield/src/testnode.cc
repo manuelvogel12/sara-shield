@@ -248,7 +248,7 @@ void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   if(msg->humans.size() > 0)
   {
     const concert_msgs::Human3D &human = msg->humans[0];
-    for(const concert_msgs::Keypoint3D &keypoint:human.skeleton_3d.keypoints)
+    for(const concert_msgs::Keypoint3D &keypoint:human.keypoints)
     {
       geometry_msgs::PointStamped pointStamped;
       geometry_msgs::PointStamped pointStampedLocal;
@@ -282,75 +282,70 @@ void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
 
 void TestNode::sendDemoHuman()
 {
-  concert_msgs::Skeleton3D skeleton;
-
+  concert_msgs::Human3D human;
   for(int i = 0; i < 30; i++){
     concert_msgs::Keypoint3D keyPoint;
     keyPoint.pose.position.x = 10.0;
     keyPoint.pose.position.y = 10.0;
     keyPoint.pose.position.z = 0.3;
-    skeleton.keypoints[i] = keyPoint;
+    human.keypoints[i] = keyPoint;
   }
     // Pelv
-  skeleton.keypoints[0].pose.position.x = 1.0;
-  skeleton.keypoints[0].pose.position.y = 0.0;
-  skeleton.keypoints[0].pose.position.z = 0.3;
+  human.keypoints[0].pose.position.x = 1.0;
+  human.keypoints[0].pose.position.y = 0.0;
+  human.keypoints[0].pose.position.z = 0.3;
 
       // Neck
-  skeleton.keypoints[12].pose.position.x = 1.0;
-  skeleton.keypoints[12].pose.position.y = 0.0;
-  skeleton.keypoints[12].pose.position.z = 1.0;
+  human.keypoints[12].pose.position.x = 1.0;
+  human.keypoints[12].pose.position.y = 0.0;
+  human.keypoints[12].pose.position.z = 1.0;
 
         // Head
-  skeleton.keypoints[15].pose.position.x = 1.0;
-  skeleton.keypoints[15].pose.position.y = 0.0;
-  skeleton.keypoints[15].pose.position.z = 1.2;
+  human.keypoints[15].pose.position.x = 1.0;
+  human.keypoints[15].pose.position.y = 0.0;
+  human.keypoints[15].pose.position.z = 1.2;
 
         // Left shoulder
-  skeleton.keypoints[16].pose.position.x = 1.01;
-  skeleton.keypoints[16].pose.position.y = 0.26;
-  skeleton.keypoints[16].pose.position.z = 0.95;
+  human.keypoints[16].pose.position.x = 1.01;
+  human.keypoints[16].pose.position.y = 0.26;
+  human.keypoints[16].pose.position.z = 0.95;
 
         // Rigth Shoulder
-  skeleton.keypoints[17].pose.position.x = 1.0;
-  skeleton.keypoints[17].pose.position.y = -0.26;
-  skeleton.keypoints[17].pose.position.z = 0.95;
+  human.keypoints[17].pose.position.x = 1.0;
+  human.keypoints[17].pose.position.y = -0.26;
+  human.keypoints[17].pose.position.z = 0.95;
 
 
         // Left elbow
-  skeleton.keypoints[18].pose.position.x = 1.0;
-  skeleton.keypoints[18].pose.position.y = 0.27;
-  skeleton.keypoints[18].pose.position.z = 0.65;
+  human.keypoints[18].pose.position.x = 1.0;
+  human.keypoints[18].pose.position.y = 0.27;
+  human.keypoints[18].pose.position.z = 0.65;
 
         // Right Elbow
-  skeleton.keypoints[19].pose.position.x = 1.0;
-  skeleton.keypoints[19].pose.position.y = -0.27;
-  skeleton.keypoints[19].pose.position.z = 0.65;
+  human.keypoints[19].pose.position.x = 1.0;
+  human.keypoints[19].pose.position.y = -0.27;
+  human.keypoints[19].pose.position.z = 0.65;
 
         // Left Wrist
-  skeleton.keypoints[20].pose.position.x = 1.0;
-  skeleton.keypoints[20].pose.position.y = 0.28;
-  skeleton.keypoints[20].pose.position.z = 0.3;
+  human.keypoints[20].pose.position.x = 1.0;
+  human.keypoints[20].pose.position.y = 0.28;
+  human.keypoints[20].pose.position.z = 0.3;
 
 
         // Right Wrist
-  skeleton.keypoints[21].pose.position.x = 1.0;
-  skeleton.keypoints[21].pose.position.y = -0.28;
-  skeleton.keypoints[21].pose.position.z = 0.3;
+  human.keypoints[21].pose.position.x = 1.0;
+  human.keypoints[21].pose.position.y = -0.28;
+  human.keypoints[21].pose.position.z = 0.3;
 
         // Left Hand
-  skeleton.keypoints[22].pose.position.x = 1.0;
-  skeleton.keypoints[22].pose.position.y = 0.29;
-  skeleton.keypoints[22].pose.position.z = 0.2;
+  human.keypoints[22].pose.position.x = 1.0;
+  human.keypoints[22].pose.position.y = 0.29;
+  human.keypoints[22].pose.position.z = 0.2;
 
           // Right Hand
-  skeleton.keypoints[23].pose.position.x = 1.0;
-  skeleton.keypoints[23].pose.position.y = -0.29;
-  skeleton.keypoints[23].pose.position.z = 0.2;
-
-  
-  concert_msgs::Human3D human;
-  human.skeleton_3d = skeleton;
+  human.keypoints[23].pose.position.x = 1.0;
+  human.keypoints[23].pose.position.y = -0.29;
+  human.keypoints[23].pose.position.z = 0.2;
 
   concert_msgs::Humans humans;
   humans.humans.push_back(human);
