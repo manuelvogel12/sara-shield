@@ -39,6 +39,7 @@ INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
 
 include_directories(
   include
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
