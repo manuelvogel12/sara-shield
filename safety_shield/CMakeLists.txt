@@ -15,6 +15,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ##Find XBOT2
 find_package(xbot2 REQUIRED)
 find_package(roscpp REQUIRED)
+# TODO: USE THIS!!!!!!!!!
+# find_package(Eigen3 3.4 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf2
@@ -29,6 +31,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Find catkin macros and libraries
 #find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
+# TODO: USE THIS!!!!!!!!!
+# INCLUDE_DIRECTORIES ( ${EIGEN3_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} )
 # Find Python
 # IF YOU DON'T WANT TO USE CONDA, DISABLE THESE THREE LINES
 #set(PYTHON_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python")
@@ -65,9 +69,9 @@ add_subdirectory(external/LongTermPlanner)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC external/pybind11/include
-    PUBLIC external/ReachLib/include
+    PUBLIC external/SaRA/ReachLib/include
     PUBLIC external/LongTermPlanner/include
-    PUBLIC /home/user/concert_ws/install/include
+    # PUBLIC /home/user/concert_ws/install/include
 #    PUBLIC external/spdlog/include
 #    PUBLIC external/yaml-cpp/include
 )
@@ -112,9 +116,9 @@ target_link_libraries(testnode
 	PUBLIC ${catkin_LIBRARIES}
   )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 #install(TARGETS ${PROJECT_NAME} DESTINATION /opt/xbot/lib)
-install(TARGETS testnode DESTINATION /opt/xbot/lib)
+install(TARGETS testnode DESTINATION lib)
 #set_target_properties(testnode PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_executable(debug src/debug.cc)
