@@ -105,6 +105,8 @@ private:
     * @brief DEBUG, numbering the time steps
     */
     int _iteration = 0;
+
+    bool _send_dummy_measurement_flag = false;
    
    /**
     * @brief DEBUG, starting time of plugin
@@ -139,6 +141,8 @@ private:
     ros::Subscriber _robot_goal_pos_sub;
 
     ros::Subscriber _safe_flag_sub;
+
+    ros::Subscriber _send_dummy_meas;
 
     /**
      * @brief Ros publisher to publish human position visualization
@@ -206,6 +210,13 @@ private:
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
 
     void safeFlagCallback(const std_msgs::Bool & msg);
+
+    /**
+     * @brief Set if the dummy human measurement should be sent.
+     * 
+     * @param msg (bool): True: Send dummy message. False: Don't send.
+     */
+    void sendDummyMeasFlagCallback(const std_msgs::Bool& msg);
 
     void sendDemoHuman();
 };

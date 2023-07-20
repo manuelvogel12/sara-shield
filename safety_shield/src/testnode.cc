@@ -23,9 +23,11 @@ bool TestNode::on_initialize()
     _human_joint_sub = nh.subscribe("/demo_human", 100, &TestNode::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
     _safe_flag_sub = nh.subscribe("/safe_flag", 100, & TestNode::safeFlagCallback, this);
+    _send_dummy_meas = nh.subscribe("/sara_shield/send_dummy_meas", 100, &TestNode::sendDummyMeasFlagCallback, this)
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
     _static_human_pub = nh.advertise<concert_msgs::Humans>("/demo_human", 100);
+    
     
     // we must explicitly set the control mode for our robot
     // in this case, we will only send positions
@@ -113,7 +115,9 @@ void TestNode::run()
 {
     _iteration++;
 
-    sendDemoHuman();
+    if (_send_dummy_measurement_flag) {
+      sendDemoHuman();
+    }
 
     //Movement
     // if (_iteration % 5 == 0) {
@@ -381,6 +385,10 @@ void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
 
 void TestNode::safeFlagCallback(const std_msgs::Bool & msg){
   _shield.setSafeOverride(msg.data);
+}
+
+void TestNode::sendDummyMeasFlagCallback(const std_msgs::Bool& msg) {
+  _send_dummy_measurement_flag = msg.data;
 }
 
 
