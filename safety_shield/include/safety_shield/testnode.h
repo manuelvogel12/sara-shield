@@ -142,7 +142,9 @@ private:
 
     ros::Subscriber _safe_flag_sub;
 
-    ros::Subscriber _send_dummy_meas;
+    ros::Subscriber _send_dummy_meas_sub;
+
+    ros::Subscriber _humans_in_scene_sub;
 
     /**
      * @brief Ros publisher to publish human position visualization
@@ -217,6 +219,14 @@ private:
      * @param msg (bool): True: Send dummy message. False: Don't send.
      */
     void sendDummyMeasFlagCallback(const std_msgs::Bool& msg);
+
+    /**
+     * @brief Set if the there can be humans in the scene.
+     * 
+     * @param msg (bool): True: There can be humans in the scene. 
+     *                    False: There cannot be humans in the scene.
+     */
+    void humansInSceneCallback(const std_msgs::Bool& msg);
 
     void sendDemoHuman();
 };

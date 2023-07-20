@@ -43,6 +43,7 @@ HumanReach::HumanReach(int n_joints_meas,
 
 void HumanReach::reset() {
   last_meas_timestep_ = -1;
+  has_second_meas_ = false;
   for (int i = 0; i < n_joints_meas_; i++) {
     joint_pos_.push_back(reach_lib::Point(0.0, 0.0, 0.0));
     joint_vel_.push_back(reach_lib::Point(0.0, 0.0, 0.0));

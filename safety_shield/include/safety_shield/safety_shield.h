@@ -503,6 +503,14 @@ protected:
   }
 
   /**
+   * @brief Tells human reach that there are no humans in the scene.
+   * 
+   */
+  inline void noHumanInTheScene() {
+    human_reach_->reset();
+  }
+
+  /**
    * @brief Receive a new human measurement. 
    * Calls humanMeasurement(const std::vector<reach_lib::Point> human_measurement, double time).
    * @param[in] human_measurement A vector of human joint measurements (list of list of doubles [x, y, z])

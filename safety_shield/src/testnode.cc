@@ -20,13 +20,14 @@ bool TestNode::on_initialize()
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/demo_human", 100, &TestNode::humanJointCallback, this);
-    _robot_goal_pos_sub = nh.subscribe("/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
-    _safe_flag_sub = nh.subscribe("/safe_flag", 100, & TestNode::safeFlagCallback, this);
-    _send_dummy_meas = nh.subscribe("/sara_shield/send_dummy_meas", 100, &TestNode::sendDummyMeasFlagCallback, this);
-    _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/human_joint_marker_array", 100);
-    _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/robot_joint_marker_array", 100);
-    _static_human_pub = nh.advertise<concert_msgs::Humans>("/demo_human", 100);
+    _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &TestNode::humanJointCallback, this);
+    _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
+    _safe_flag_sub = nh.subscribe("/sara_shield/safe_flag", 100, & TestNode::safeFlagCallback, this);
+    _send_dummy_meas_sub = nh.subscribe("/sara_shield/send_dummy_meas", 100, &TestNode::sendDummyMeasFlagCallback, this);
+    _humans_in_scene_sub = nh.subscribe("/sara_shield/humans_in_scene", 100, &TestNode::humansInSceneCallback, this);
+    _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
+    _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
+    _static_human_pub = nh.advertise<concert_msgs::Humans>("/human_pose_measurement", 100);
     
     
     // we must explicitly set the control mode for our robot
@@ -372,6 +373,12 @@ void TestNode::safeFlagCallback(const std_msgs::Bool & msg){
 
 void TestNode::sendDummyMeasFlagCallback(const std_msgs::Bool& msg) {
   _send_dummy_measurement_flag = msg.data;
+}
+
+void TestNode::humansInSceneCallback(const std_msgs::Bool& msg) {
+  if (!msg.data) {
+    _shield.noHumanInTheScene();
+  }
 }
 
 
