@@ -511,7 +511,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /human_joint_marker_array
+      Marker Topic: /sara_shield/human_joint_marker_array
       Name: MarkerArray
       Namespaces:
         shapes: true
@@ -519,7 +519,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /robot_joint_marker_array
+      Marker Topic: /sara_shield/robot_joint_marker_array
       Name: MarkerArray
       Namespaces:
         shapes: true
