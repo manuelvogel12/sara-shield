@@ -52,7 +52,7 @@ void HumanReach::reset() {
 
 void HumanReach::measurement(const std::vector<reach_lib::Point>& human_joint_pos, double time) {
   try {
-    if (last_meas_timestep_ != -1) {
+    if (last_meas_timestep_ >= 0.0) {
       double dt = time - last_meas_timestep_;
       for (int i = 0; i < human_joint_pos.size(); i++) {
         // If more than 1 measurement, calculate velocity
@@ -72,7 +72,12 @@ void HumanReach::measurement(const std::vector<reach_lib::Point>& human_joint_po
 void HumanReach::humanReachabilityAnalysis(double t_command, double t_brake) {
   try {
     // Time between reach command msg and last measurement plus the t_brake time.
-    double t_reach = t_command-last_meas_timestep_ + t_brake;
+    double t_reach = 0.0;
+    if (last_meas_timestep_ >= 0.0) {
+      t_reach = t_command-last_meas_timestep_ + t_brake;
+    } else {
+      t_reach = t_brake;
+    }
     // Calculate reachable set
     human_p_.update(0.0, t_reach, joint_pos_, joint_vel_);
     human_v_.update(0.0, t_reach, joint_pos_, joint_vel_);
