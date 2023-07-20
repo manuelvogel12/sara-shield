@@ -36,7 +36,7 @@ HumanReach::HumanReach(int n_joints_meas,
   human_p_ = reach_lib::ArticulatedPos(system, extremity_body_segment_map, extremity_thickness, extremity_max_v, extremity_length);
 
   for (int i = 0; i < n_joints_meas; i++) {
-    joint_pos_.push_back(reach_lib::Point(0.0, 0.0, 0.0));
+    joint_pos_.push_back(reach_lib::Point(1000.0, 0.0, 0.0));
     joint_vel_.push_back(reach_lib::Point(0.0, 0.0, 0.0));
   }
 }
@@ -45,7 +45,7 @@ void HumanReach::reset() {
   last_meas_timestep_ = -1;
   has_second_meas_ = false;
   for (int i = 0; i < n_joints_meas_; i++) {
-    joint_pos_.push_back(reach_lib::Point(0.0, 0.0, 0.0));
+    joint_pos_.push_back(reach_lib::Point(1000.0, 0.0, 0.0));
     joint_vel_.push_back(reach_lib::Point(0.0, 0.0, 0.0));
   }
 }
