@@ -173,8 +173,10 @@ void TestNode::run()
     //Eigen::VectorXd _q = Eigen::VectorXd::Zero(13);
     Eigen::Map<Eigen::VectorXd> _q(&q[0], q.size()); 
 
-    //DEBUG: visualize in every timestep
-    //visualizeRobotAndHuman();
+    // Visualize in every 10th timestep
+    if (_iteration % 5 == 0) {
+      visualizeRobotAndHuman();
+    }
     
     
     // Move the robot
@@ -253,10 +255,7 @@ void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
     ROS_WARN("NO TRANSFORM FOUND (ExtrapolationException)");
     return;
   }
-
-  // visualize the robot and human
-  visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
-  visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
+  
   _human_meas.clear();
   
   //get all human measurment points and transform them to robot coordinate system
@@ -277,22 +276,6 @@ void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   }
 
   _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
-
-  // visualization of Robot and Human Capsules
-  std::vector<std::vector<double>> humanCapsules =
-      _shield.getHumanReachCapsules(1);
-  createPoints(humanMarkerArray, 3 * humanCapsules.size(),
-               visualization_msgs::Marker::CYLINDER, 2);
-  createCapsules(humanMarkerArray, humanCapsules);
-
-  std::vector<std::vector<double>> robotReachCapsules =
-      _shield.getRobotReachCapsules();
-  createPoints(robotMarkerArray, 3 * robotReachCapsules.size(),
-               visualization_msgs::Marker::CYLINDER, 0);
-  createCapsules(robotMarkerArray, robotReachCapsules);
-
-  _human_marker_pub.publish(humanMarkerArray);
-  _robot_marker_pub.publish(robotMarkerArray);
 }
 
 void TestNode::sendDemoHuman()
