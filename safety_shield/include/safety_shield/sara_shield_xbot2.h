@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*/
 /**
- * @file testnode.h
+ * @file sara_shield_xbot2.h
  * @brief execute the sara shield in the xbot-concert framework
  * @version 0.1
  * @copyright This file is part of SaRA-Shield.
@@ -14,8 +14,8 @@
  * If not, see <https://www.gnu.org/licenses/>. 
  */
 
-#ifndef TESTNODE_H
-#define TESTNODE_H
+#ifndef SARASHIELDXBOT_H
+#define SARASHIELDXBOT_H
 
 #include "reach_lib.hpp"
 #include "safety_shield/safety_shield.h"
@@ -50,7 +50,7 @@ using namespace XBot;
 /**
  * @brief Node to execute sara shield in the xbot-concert framework
  */
-class TestNode : public ControlPlugin
+class SaraShieldXbot2 : public ControlPlugin
 {
 
 public:
@@ -59,7 +59,7 @@ public:
      * @brief  Constructor to initialize tf2 Buffer and tf2 Listener
      * @param  args: arguments for the parent(XBot::ControlPlugin) constructor
      */
-    TestNode(const Args& args);
+    SaraShieldXbot2(const Args& args);
 
     //using ControlPlugin::ControlPlugin;
 
@@ -231,4 +231,4 @@ private:
     void sendDemoHuman();
 };
 
-#endif //TESTNODE_H
+#endif //SARASHIELDXBOT_H

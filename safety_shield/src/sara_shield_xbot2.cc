@@ -1,4 +1,4 @@
-#include "safety_shield/testnode.h"
+#include "safety_shield/sara_shield_xbot2.h"
 
 #include <string>
 #include <type_traits>
@@ -7,24 +7,24 @@
 #include <cstdlib>
 
 
-TestNode::TestNode(const Args& args)
+SaraShieldXbot2::SaraShieldXbot2(const Args& args)
   :ControlPlugin(args),
   _tfBuffer(tf2_ros::Buffer()),
   _tfListener(tf2_ros::TransformListener(_tfBuffer))
 {
 }
 
-bool TestNode::on_initialize()
+bool SaraShieldXbot2::on_initialize()
 {
     //init ROS
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
-    _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &TestNode::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &TestNode::humanJointCallback, this);
-    _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & TestNode::goalJointPosCallback, this);
-    _safe_flag_sub = nh.subscribe("/sara_shield/safe_flag", 100, & TestNode::safeFlagCallback, this);
-    _send_dummy_meas_sub = nh.subscribe("/sara_shield/send_dummy_meas", 100, &TestNode::sendDummyMeasFlagCallback, this);
-    _humans_in_scene_sub = nh.subscribe("/sara_shield/humans_in_scene", 100, &TestNode::humansInSceneCallback, this);
+    _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &SaraShieldXbot2::modelStatesCallback, this);
+    _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
+    _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & SaraShieldXbot2::goalJointPosCallback, this);
+    _safe_flag_sub = nh.subscribe("/sara_shield/safe_flag", 100, & SaraShieldXbot2::safeFlagCallback, this);
+    _send_dummy_meas_sub = nh.subscribe("/sara_shield/send_dummy_meas", 100, &SaraShieldXbot2::sendDummyMeasFlagCallback, this);
+    _humans_in_scene_sub = nh.subscribe("/sara_shield/humans_in_scene", 100, &SaraShieldXbot2::humansInSceneCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
     _static_human_pub = nh.advertise<concert_msgs::Humans>("/human_pose_measurement", 100);
@@ -95,7 +95,7 @@ bool TestNode::on_initialize()
 }
 
 
-void TestNode::on_start()
+void SaraShieldXbot2::on_start()
 {
     _robot->sense();
     
@@ -112,7 +112,7 @@ void TestNode::on_start()
 }
 
 
-void TestNode::run()
+void SaraShieldXbot2::run()
 {
     _iteration++;
 
@@ -192,7 +192,7 @@ void TestNode::run()
 }
 
 //convert the gazebo transformation between world and base_link into a tf
-void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg) {
+void SaraShieldXbot2::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg) {
   // find the index of the robot transform in the list of transforms
   int index = -1;
   for (uint64_t i = 0; i < msg->name.size(); i++) {
@@ -219,7 +219,7 @@ void TestNode::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "base_link"));
 }
 
-void TestNode::visualizeRobotAndHuman(){
+void SaraShieldXbot2::visualizeRobotAndHuman(){
   // visualize the robot and human
   visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
   visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
@@ -243,7 +243,7 @@ void TestNode::visualizeRobotAndHuman(){
 
 
 // Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
-void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
+void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
   try {
@@ -279,7 +279,7 @@ void TestNode::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
 }
 
-void TestNode::sendDemoHuman()
+void SaraShieldXbot2::sendDemoHuman()
 {
   concert_msgs::Human3D human;
   for(int i = 0; i < 30; i++){
@@ -356,7 +356,7 @@ void TestNode::sendDemoHuman()
   _static_human_pub.publish(humans);
 }
 
-void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
+void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
 {
   //float goal_joint_pos_array[14] = msg.data;
   std::vector<double> a(msg.data.begin(), msg.data.end());
@@ -367,22 +367,22 @@ void TestNode::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
 }
 
 
-void TestNode::safeFlagCallback(const std_msgs::Bool & msg){
+void SaraShieldXbot2::safeFlagCallback(const std_msgs::Bool & msg){
   _shield.setSafeOverride(msg.data);
 }
 
-void TestNode::sendDummyMeasFlagCallback(const std_msgs::Bool& msg) {
+void SaraShieldXbot2::sendDummyMeasFlagCallback(const std_msgs::Bool& msg) {
   _send_dummy_measurement_flag = msg.data;
 }
 
-void TestNode::humansInSceneCallback(const std_msgs::Bool& msg) {
+void SaraShieldXbot2::humansInSceneCallback(const std_msgs::Bool& msg) {
   if (!msg.data) {
     _shield.noHumanInTheScene();
   }
 }
 
 
-void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
+void SaraShieldXbot2::createPoints(visualization_msgs::MarkerArray& markers, int nb_points_to_add, int shape_type, 
     int color_type) {
   int prev_size = markers.markers.size();
   for(int i = 0; i < nb_points_to_add; i++) {
@@ -420,7 +420,7 @@ void TestNode::createPoints(visualization_msgs::MarkerArray& markers, int nb_poi
   }
 }
 
-void TestNode::createCapsules(visualization_msgs::MarkerArray& markers, const std::vector<std::vector<double>>& capsules) { 
+void SaraShieldXbot2::createCapsules(visualization_msgs::MarkerArray& markers, const std::vector<std::vector<double>>& capsules) { 
   auto marker = markers.markers.begin();
   for(const std::vector<double>& cap :capsules) {
     geometry_msgs::Point p1;
@@ -444,7 +444,7 @@ void TestNode::createCapsules(visualization_msgs::MarkerArray& markers, const st
   }
 }
 
-void TestNode::createSphere(const geometry_msgs::Point& pos, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker) {
+void SaraShieldXbot2::createSphere(const geometry_msgs::Point& pos, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker) {
   marker.type = visualization_msgs::Marker::SPHERE;
   marker.pose.position = pos;
   marker.scale.x = 2*radius;
@@ -454,7 +454,7 @@ void TestNode::createSphere(const geometry_msgs::Point& pos, double radius, cons
 }
 
 
-void TestNode::createCylinder(const geometry_msgs::Point& p1, const geometry_msgs::Point p2, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker) {
+void SaraShieldXbot2::createCylinder(const geometry_msgs::Point& p1, const geometry_msgs::Point p2, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker) {
   double p1x = p1.x;
   double p1y = p1.y;
   double p1z = p1.z;
@@ -492,5 +492,5 @@ void TestNode::createCylinder(const geometry_msgs::Point& p1, const geometry_msg
   marker.header.stamp = stamp;
 }
 
-XBOT2_REGISTER_PLUGIN(TestNode, testnode)
+XBOT2_REGISTER_PLUGIN(SaraShieldXbot2, sara_shield_xbot2)
 

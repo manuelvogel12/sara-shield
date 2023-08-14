@@ -89,10 +89,10 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 
-## TestNode ##
+## sara_shield_xbot2 ##
 #catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES testnode
+#  LIBRARIES sara_shield_xbot2
 #  CATKIN_DEPENDS roscpp tf2 tf2_ros
 #)
 
@@ -101,13 +101,13 @@ target_link_libraries(${PROJECT_NAME}
 #  ${catkin_INCLUDE_DIRS}
 #)
 
-add_xbot2_plugin(testnode src/testnode.cc)
+add_xbot2_plugin(sara_shield_xbot2 src/sara_shield_xbot2.cc)
 
-target_include_directories(testnode
+target_include_directories(sara_shield_xbot2
   PUBLIC /opt/ros/noetic/lib
   )
 
-target_link_libraries(testnode
+target_link_libraries(sara_shield_xbot2
 	PUBLIC ${PROJECT_NAME}
 	PUBLIC XBotInterface::XBotInterface
 	PUBLIC ${roscpp_LIBRARIES}
@@ -116,8 +116,8 @@ target_link_libraries(testnode
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 #install(TARGETS ${PROJECT_NAME} DESTINATION /opt/xbot/lib)
-install(TARGETS testnode DESTINATION lib)
-#set_target_properties(testnode PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+install(TARGETS sara_shield_xbot2 DESTINATION lib)
+#set_target_properties(sara_shield_xbot2 PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_executable(debug src/debug.cc)
 target_link_libraries(debug ${PROJECT_NAME} long_term_planner yaml-cpp)
