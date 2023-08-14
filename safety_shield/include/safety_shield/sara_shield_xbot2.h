@@ -157,6 +157,8 @@ private:
     ros::Publisher _robot_marker_pub;
 
     ros::Publisher _static_human_pub;   
+
+    ros::Publisher _sara_shield_safe_pub;
     
     /**
      * @brief Convert the gazebo transformation between world and base_link into a tf

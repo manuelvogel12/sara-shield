@@ -28,6 +28,7 @@ bool SaraShieldXbot2::on_initialize()
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
     _static_human_pub = nh.advertise<concert_msgs::Humans>("/human_pose_measurement", 100);
+    _sara_shield_safe_pub = nh.advertise<std_msgs::Bool>("/sara_shield/is_safe", 100);
     
     
     // we must explicitly set the control mode for our robot
@@ -187,6 +188,12 @@ void SaraShieldXbot2::run()
     //_robot->getPositionReference(_q_obs);
     //std::cout<<"observed: \n "<<_q_obs<<std::endl;
     //std::cout<<"safe:" <<_shield.getSafety()<<std::endl;
+
+    
+    // Send status bool
+    std_msgs::Bool status;
+    status.data = _shield.getSafety();
+    _sara_shield_safe_pub.publish(status);
 
     ros::spinOnce();
 }
