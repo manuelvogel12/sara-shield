@@ -138,12 +138,24 @@ private:
      */
     ros::Subscriber _model_state_sub;
     
+    /**
+     * @brief Ros subscriber to reveice goal positions for each joint
+     */
     ros::Subscriber _robot_goal_pos_sub;
 
+    /**
+     * @brief Ros subscriber to reveice an "safe" or "unsafe" flag.  
+     */
     ros::Subscriber _safe_flag_sub;
 
+    /**
+     * @brief Ros subscriber to send dummy human measurements, when flag is enabled
+     */
     ros::Subscriber _send_dummy_meas_sub;
 
+    /**
+     * @brief Ros subscriber to tell the sara-shield whether there are humans in the scene or not
+     */
     ros::Subscriber _humans_in_scene_sub;
 
     /**
@@ -156,8 +168,14 @@ private:
      */
     ros::Publisher _robot_marker_pub;
 
+    /**
+     * @brief Ros publisher to send dummy human measurements
+     */
     ros::Publisher _static_human_pub;   
 
+    /**
+     * @brief Ros subscriber to send the safe flag from sara-shield
+     */
     ros::Publisher _sara_shield_safe_pub;
     
     /**
@@ -209,10 +227,21 @@ private:
     void createCylinder(const geometry_msgs::Point& p1, const geometry_msgs::Point p2, double radius, const ros::Time& stamp, visualization_msgs::Marker& marker);
 
 
+    /**
+     * @brief Function to publish RVIZ visualization markers
+     */
     void visualizeRobotAndHuman();  
 
+    /**
+     * @brief Callback to receive new goal joint positions 
+     * @param msg Float array. Each float represents the joint posiiton for one joint
+     */
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
 
+    /**
+     * @brief Send the safe status of sara-shield
+     * @param msg (bool) True: Collision free, False: capsules are overlappign
+     */
     void safeFlagCallback(const std_msgs::Bool & msg);
 
     /**
@@ -230,6 +259,10 @@ private:
      */
     void humansInSceneCallback(const std_msgs::Bool& msg);
 
+
+    /**
+     * @brief sending dummy human measurements for tests without simulation or real humans 
+     */
     void sendDemoHuman();
 };
 
