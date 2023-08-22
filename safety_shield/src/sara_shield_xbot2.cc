@@ -35,23 +35,10 @@ bool SaraShieldXbot2::on_initialize()
     // in this case, we will only send positions
     setDefaultControlMode(ControlMode::Position() + ControlMode::Velocity());
     // _robot->setControlMode(ControlMode::Position() + ControlMode::Velocity());
-    
-    // do some on-start initialization
-    _robot->sense();
-    //_robot->getPositionReference(_q_start);
-    //_robot->getVelocityReference(_v_start);
 
     bool activate_shield = true;
 
     double sample_time = getPeriodSec();
-    //Note: executing directory is /tmp/something/ TODO: make path relative somehow
-    //std::string trajectory_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/trajectory_parameters_schunk.yaml");
-    //std::string robot_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/robot_parameters_schunk.yaml");
-    //std::string mocap_config_file = std::string("/home/user/concert_ws/src/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml");
-    // std::string trajectory_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/trajectory_parameters_concert.yaml";
-    // std::string robot_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/robot_parameters_concert.yaml";
-    // std::string mocap_config_file = std::string(std::getenv("HOME")) + "/concert_ws/src/concert_description/sara-shield/safety_shield/config/cmu_mocap_no_hand.yaml";
-    //std::string robot_config_file = std::string("/tmp/robot_parameters_schunk.yaml");
 
     std::string trajectory_config_file = getParamOrThrow<std::string>("~trajectory_config_file");
     std::string robot_config_file = getParamOrThrow<std::string>("~robot_config_file");
@@ -64,9 +51,6 @@ bool SaraShieldXbot2::on_initialize()
     double init_pitch = 0.0;
     double init_yaw = 0.0;
     std::vector<double> init_qpos = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-    //YAML::Node robot_config = YAML::LoadFile(robot_config_file);
-    //std::cout<<robot_config["robot_name"].as<std::string>()<<std::endl;
 
     _shield = safety_shield::SafetyShield(activate_shield,
       sample_time,
@@ -81,14 +65,14 @@ bool SaraShieldXbot2::on_initialize()
       init_yaw,
       init_qpos);
 
-    // Dummy human measurement
 
+    // Dummy human measurement
     _human_meas.resize(21);
     for (int i=0; i<21; i++) {
       _human_meas[i] = reach_lib::Point(400.0, 400.0, 0.0);
     }
 
-  return true;
+    return true;
 
     //auto start_time = std::chrono::system_clock::now();
     //double t = std::chrono::duration<double>(std::chrono::system_clock::now()-start_time).count();
@@ -164,7 +148,7 @@ void SaraShieldXbot2::run()
     for(int i = q.size(); i< 14; i++)
     	q.insert(q.begin(), 0);
 
-    //DEBUG: print angles of ronot
+    //DEBUG: print angles of the robot
     std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
     for(double d: q){
         std::cout<<d<<",";
@@ -222,7 +206,7 @@ void SaraShieldXbot2::modelStatesCallback(const gazebo_msgs::ModelStates::ConstP
 
   //publish the transform
   static tf::TransformBroadcaster br;
-  ROS_INFO("INCOMING TRANSFORM");
+  ROS_DEBUG("Incoming Transform");
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "base_link"));
 }
 
@@ -231,7 +215,7 @@ void SaraShieldXbot2::visualizeRobotAndHuman(){
   visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
   visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
 
-  // visualization of Robot and Human Capsules
+  // visualization of robot and human capsules
   std::vector<std::vector<double>> humanCapsules =_shield.getHumanReachCapsules(1);
   createPoints(humanMarkerArray, 3 * humanCapsules.size(),
                visualization_msgs::Marker::CYLINDER, 2);
@@ -249,7 +233,7 @@ void SaraShieldXbot2::visualizeRobotAndHuman(){
 }
 
 
-// Reads the human pose from the Gazebo msg, and uses it for sara_shield. Also publishes visualization msgs of the human meas points
+// Reads the human pose from the Gazebo msg, and uses it for sara_shield
 void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
@@ -285,6 +269,7 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
 
   _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
 }
+
 
 void SaraShieldXbot2::sendDemoHuman()
 {
@@ -359,7 +344,7 @@ void SaraShieldXbot2::sendDemoHuman()
   humans.header.frame_id = "base_link";
   humans.header.stamp = ros::Time::now();
 
-  std::cout<<"SEND HUMAN"<<std::endl;
+  //std::cout<<"SEND HUMAN"<<std::endl;
   _static_human_pub.publish(humans);
 }
 
@@ -370,7 +355,6 @@ void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& ms
   _goal_joint_pos = a;
   _new_goal = true;
   //_goal_joint_pos = static_cast<double>(goal_joint_pos_array);
-
 }
 
 
@@ -378,9 +362,11 @@ void SaraShieldXbot2::safeFlagCallback(const std_msgs::Bool & msg){
   _shield.setSafeOverride(msg.data);
 }
 
+
 void SaraShieldXbot2::sendDummyMeasFlagCallback(const std_msgs::Bool& msg) {
   _send_dummy_measurement_flag = msg.data;
 }
+
 
 void SaraShieldXbot2::humansInSceneCallback(const std_msgs::Bool& msg) {
   if (!msg.data) {
