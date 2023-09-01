@@ -20,14 +20,14 @@ bool SaraShieldXbot2::on_initialize()
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &SaraShieldXbot2::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
+    _human_joint_sub = nh.subscribe("/sara_shield/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & SaraShieldXbot2::goalJointPosCallback, this);
     _safe_flag_sub = nh.subscribe("/sara_shield/safe_flag", 100, & SaraShieldXbot2::safeFlagCallback, this);
     _send_dummy_meas_sub = nh.subscribe("/sara_shield/send_dummy_meas", 100, &SaraShieldXbot2::sendDummyMeasFlagCallback, this);
     _humans_in_scene_sub = nh.subscribe("/sara_shield/humans_in_scene", 100, &SaraShieldXbot2::humansInSceneCallback, this);
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
-    _static_human_pub = nh.advertise<concert_msgs::Humans>("/human_pose_measurement", 100);
+    _static_human_pub = nh.advertise<concert_msgs::Humans>("/sara_shield/human_pose_measurement", 100);
     _sara_shield_safe_pub = nh.advertise<std_msgs::Bool>("/sara_shield/is_safe", 100);
     
     
@@ -105,7 +105,7 @@ void SaraShieldXbot2::run()
       sendDemoHuman();
     }
 
-    //Movement
+    // Movement
     // if (_iteration % 5 == 0) {
     //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
     //     std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -281,59 +281,59 @@ void SaraShieldXbot2::sendDemoHuman()
     keyPoint.pose.position.z = 0.3;
     human.keypoints[i] = keyPoint;
   }
-    // Pelv
+  // Pelv
   human.keypoints[0].pose.position.x = 1.0;
   human.keypoints[0].pose.position.y = 0.0;
   human.keypoints[0].pose.position.z = 0.3;
 
-      // Neck
+  // Neck
   human.keypoints[12].pose.position.x = 1.0;
   human.keypoints[12].pose.position.y = 0.0;
   human.keypoints[12].pose.position.z = 1.0;
 
-        // Head
+  // Head
   human.keypoints[15].pose.position.x = 1.0;
   human.keypoints[15].pose.position.y = 0.0;
   human.keypoints[15].pose.position.z = 1.2;
 
-        // Left shoulder
+  // Left shoulder
   human.keypoints[16].pose.position.x = 1.01;
   human.keypoints[16].pose.position.y = 0.26;
   human.keypoints[16].pose.position.z = 0.95;
 
-        // Rigth Shoulder
+  // Rigth Shoulder
   human.keypoints[17].pose.position.x = 1.0;
   human.keypoints[17].pose.position.y = -0.26;
   human.keypoints[17].pose.position.z = 0.95;
 
 
-        // Left elbow
+  // Left elbow
   human.keypoints[18].pose.position.x = 1.0;
   human.keypoints[18].pose.position.y = 0.27;
   human.keypoints[18].pose.position.z = 0.65;
 
-        // Right Elbow
+  // Right Elbow
   human.keypoints[19].pose.position.x = 1.0;
   human.keypoints[19].pose.position.y = -0.27;
   human.keypoints[19].pose.position.z = 0.65;
 
-        // Left Wrist
+  // Left Wrist
   human.keypoints[20].pose.position.x = 1.0;
   human.keypoints[20].pose.position.y = 0.28;
   human.keypoints[20].pose.position.z = 0.3;
 
 
-        // Right Wrist
+  // Right Wrist
   human.keypoints[21].pose.position.x = 1.0;
   human.keypoints[21].pose.position.y = -0.28;
   human.keypoints[21].pose.position.z = 0.3;
 
-        // Left Hand
+  // Left Hand
   human.keypoints[22].pose.position.x = 1.0;
   human.keypoints[22].pose.position.y = 0.29;
   human.keypoints[22].pose.position.z = 0.2;
 
-          // Right Hand
+  // Right Hand
   human.keypoints[23].pose.position.x = 1.0;
   human.keypoints[23].pose.position.y = -0.29;
   human.keypoints[23].pose.position.z = 0.2;
@@ -350,11 +350,9 @@ void SaraShieldXbot2::sendDemoHuman()
 
 void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
 {
-  //float goal_joint_pos_array[14] = msg.data;
   std::vector<double> a(msg.data.begin(), msg.data.end());
   _goal_joint_pos = a;
   _new_goal = true;
-  //_goal_joint_pos = static_cast<double>(goal_joint_pos_array);
 }
 
 
