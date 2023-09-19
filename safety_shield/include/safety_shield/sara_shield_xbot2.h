@@ -100,6 +100,7 @@ private:
      * @brief Human measurement points to be used in sara shield
      */
     std::vector<reach_lib::Point> _human_meas;
+    std::vector<reach_lib::Point> _human_meas2;
 
    /**
     * @brief DEBUG, numbering the time steps

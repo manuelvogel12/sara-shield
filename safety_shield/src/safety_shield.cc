@@ -27,7 +27,7 @@ SafetyShield::SafetyShield(bool activate_shield,
       const std::vector<double> &j_max_path, 
       const LongTermTraj &long_term_trajectory, 
       RobotReach* robot_reach,
-      HumanReach* human_reach,
+      std::vector<HumanReach*> humans_reach,
       Verify* verify):
   activate_shield_(activate_shield),
   nb_joints_(nb_joints),
@@ -42,7 +42,7 @@ SafetyShield::SafetyShield(bool activate_shield,
   path_s_discrete_(0),
   long_term_trajectory_(long_term_trajectory),
   robot_reach_(robot_reach),
-  human_reach_(human_reach),
+  humans_reach_(humans_reach),
   verify_(verify),
   safe_override_(true)
 {
@@ -144,19 +144,21 @@ SafetyShield::SafetyShield(bool activate_shield,
       extremity_length.push_back(extremity["length"].as<double>());
       extremity_thickness.push_back(extremity["thickness"].as<double>());
     }
-    human_reach_ = new HumanReach(joint_names.size(),
-      joint_names,
-      body_link_joints, 
-      thickness, 
-      joint_v_max, 
-      joint_a_max,
-      extremity_base_names, 
-      extremity_end_names, 
-      extremity_length,
-      extremity_thickness,
-      measurement_error_pos, 
-      measurement_error_vel, 
-      delay);
+    for(int i=0; i<4; i++){ //TODO FIX NUMBER OF HUMANS
+      humans_reach_.push_back(new HumanReach(joint_names.size(),
+        joint_names,
+        body_link_joints, 
+        thickness, 
+        joint_v_max, 
+        joint_a_max,
+        extremity_base_names, 
+        extremity_end_names, 
+        extremity_length,
+        extremity_thickness,
+        measurement_error_pos, 
+        measurement_error_vel, 
+        delay));
+    }
     ///////////// Build verifier
     verify_ = new safety_shield::VerifyISO();
     /////////// Other settings
@@ -183,7 +185,9 @@ void SafetyShield::reset(bool activate_shield,
       const std::vector<double> &init_qpos,
       double current_time) {
   robot_reach_->reset(init_x, init_y, init_z, init_roll, init_pitch, init_yaw);
-  human_reach_->reset();
+  for(safety_shield::HumanReach* human_reach: humans_reach_){
+      human_reach->reset();
+  }
   std::vector<double> prev_dq;
   for(int i = 0; i < 6; i++) {
       prev_dq.push_back(0.0);
@@ -577,8 +581,16 @@ Motion SafetyShield::step(double cycle_begin_time) {
         robot_capsules_ = robot_reach_->reach(current_motion, goal_motion, (goal_motion.getS()-current_motion.getS()), alpha_i_);
         // Compute the human reachable sets for the potential trajectory
         // humanReachabilityAnalysis(t_command, t_brake)
-        human_reach_->humanReachabilityAnalysis(cycle_begin_time_, goal_motion.getTime());
-        human_capsules_ = human_reach_->getAllCapsules();
+        human_capsules_.clear();
+        for(safety_shield::HumanReach* human_reach: humans_reach_){
+          human_reach->humanReachabilityAnalysis(cycle_begin_time_, goal_motion.getTime());
+          std::vector<std::vector<occupancy_containers::capsule::Capsule>> capsules = human_reach->getAllCapsules();
+          human_capsules_.resize(capsules.size());
+          for (int capType = 0; capType <  capsules.size(); capType++){
+            human_capsules_[capType].insert(human_capsules_[capType].end(), capsules[capType].begin(), capsules[capType].end());
+          }
+        }
+        
         // Verify if the robot and human reachable sets are collision free
         is_safe_ = verify_->verify_human_reach(robot_capsules_, human_capsules_);
       }

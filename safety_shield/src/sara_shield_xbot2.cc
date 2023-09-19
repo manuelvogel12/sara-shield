@@ -71,6 +71,10 @@ bool SaraShieldXbot2::on_initialize()
     for (int i=0; i<21; i++) {
       _human_meas[i] = reach_lib::Point(400.0, 400.0, 0.0);
     }
+    _human_meas2.resize(21);
+    for (int i=0; i<21; i++) {
+      _human_meas2[i] = reach_lib::Point(400.0, 400.0, 0.0);
+    }
 
     return true;
 
@@ -249,7 +253,8 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
   }
   
   _human_meas.clear();
-  
+  _human_meas2.clear();
+
   //get all human measurment points and transform them to robot coordinate system
   if(msg->humans.size() > 0)
   {
@@ -264,10 +269,13 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
       
       _human_meas.emplace_back(
           reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
-      }
+      _human_meas2.emplace_back(
+          reach_lib::Point(pointLocal.x + 3.0, pointLocal.y, pointLocal.z));
+    }
   }
 
-  _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
+  _shield.humanMeasurement(_human_meas, 0, msg->header.stamp.toSec());
+  _shield.humanMeasurement(_human_meas2, 1, msg->header.stamp.toSec());
 }
 
 
