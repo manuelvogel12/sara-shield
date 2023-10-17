@@ -9,16 +9,14 @@ joint_names: [
   "rKnee", "spine", "lAnkle", "rAnkle", "thor",
   "lToe", "rToe", "neck", "lClav", "rClav",
   "head", "lShldr", "rShldr", "lElbow", "rElbow",
-  "lWrist", "rWrist", "lHand", "rHand", "nose",
-  "eyes", "lEar", "rEar", "htop_mpi_inf_hp"
+  "lWrist", "rWrist", "lHand", "rHand", "nose"
 ]
 joint_v_max: [
   2, 2, 2, 2, 2, 
   2, 2, 2, 2, 2,
   2, 2, 2, 2, 2, 
   2, 2, 2, 2, 2,
-  2, 2, 2, 2, 2,
-  2, 2, 2, 2
+  2, 2, 2, 2, 2
 ]
 
 joint_a_max: [
@@ -26,8 +24,7 @@ joint_a_max: [
   30, 30, 30, 30, 30,
   30, 30, 30, 30, 30,
   30, 30, 30, 30, 30,
-  30, 30, 30, 30, 30,
-  30, 30, 30, 30
+  30, 30, 30, 30, 30
 ]
 # All values are in the 95% Quantiles defined in DIN 33402-2
 # There are no values about arm circumfence, so we take the leg values as overapproximation.

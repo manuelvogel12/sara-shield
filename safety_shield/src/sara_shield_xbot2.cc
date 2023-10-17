@@ -282,7 +282,7 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
 void SaraShieldXbot2::sendDemoHuman()
 {
   concert_msgs::Human3D human;
-  for(int i = 0; i < 30; i++){
+  for(int i = 0; i < 25; i++){
     concert_msgs::Keypoint3D keyPoint;
     keyPoint.pose.position.x = 10.0;
     keyPoint.pose.position.y = 10.0;
