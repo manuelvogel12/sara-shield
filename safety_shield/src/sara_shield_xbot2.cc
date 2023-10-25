@@ -244,7 +244,7 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
 
   try {
     transformation = _tfBuffer.lookupTransform(
-        "base_link", msg->header.frame_id, msg->header.stamp, ros::Duration(0.003));
+        "base_link", source_frame, msg->header.stamp, ros::Duration(0.003));
   } catch (tf2::LookupException const&) {
     ROS_WARN("NO TRANSFORM FOUND (Lookup failed)");
     return;
