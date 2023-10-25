@@ -237,6 +237,11 @@ void SaraShieldXbot2::visualizeRobotAndHuman(){
 void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
+  std::string source_frame =  msg->header.frame_id;
+  if(source_frame == ""){
+    source_frame="base_link";
+  }
+
   try {
     transformation = _tfBuffer.lookupTransform(
         "base_link", msg->header.frame_id, msg->header.stamp, ros::Duration(0.003));
