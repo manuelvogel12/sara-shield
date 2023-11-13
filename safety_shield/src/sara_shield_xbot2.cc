@@ -63,7 +63,8 @@ bool SaraShieldXbot2::on_initialize()
       init_roll,
       init_pitch,
       init_yaw,
-      init_qpos);
+      init_qpos,
+      4);
 
 
     // Dummy human measurement
@@ -259,18 +260,23 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
     for (const concert_msgs::Human3D &human: msg->humans){
       _human_meas.clear();
       int human_index = human.label_id;
-    for(const concert_msgs::Keypoint3D &keypoint:human.keypoints)
-    {
-      geometry_msgs::PointStamped pointStamped;
-      geometry_msgs::PointStamped pointStampedLocal;
-      pointStamped.point = keypoint.pose.position;    
-      tf2::doTransform(pointStamped, pointStampedLocal, transformation);
-      geometry_msgs::Point pointLocal = pointStampedLocal.point;
-      
-      _human_meas.emplace_back(
-          reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
+      for(const concert_msgs::Keypoint3D &keypoint:human.keypoints)
+      {
+        geometry_msgs::PointStamped pointStamped;
+        geometry_msgs::PointStamped pointStampedLocal;
+        pointStamped.point = keypoint.pose.position;    
+        tf2::doTransform(pointStamped, pointStampedLocal, transformation);
+        geometry_msgs::Point pointLocal = pointStampedLocal.point;
+        
+        _human_meas.emplace_back(
+            reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
       }
-      _shield.humanMeasurement(_human_meas, human_index, msg->header.stamp.toSec());
+      double messageTime = msg->header.stamp.toSec();
+      if(messageTime == 0.0){
+        messageTime = ros::Time::now().toSec();
+      }
+      _shield.humanMeasurement(_human_meas, human_index, messageTime);
+
     }
   }
 }
