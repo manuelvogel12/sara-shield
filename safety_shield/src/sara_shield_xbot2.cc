@@ -237,9 +237,14 @@ void SaraShieldXbot2::visualizeRobotAndHuman(){
 void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg) {
   // get the robot position
   geometry_msgs::TransformStamped transformation;
+  std::string source_frame =  msg->header.frame_id;
+  if(source_frame == ""){
+    source_frame="base_link";
+  }
+
   try {
     transformation = _tfBuffer.lookupTransform(
-        "base_link", msg->header.frame_id, msg->header.stamp, ros::Duration(0.003));
+        "base_link", source_frame, msg->header.stamp, ros::Duration(0.003));
   } catch (tf2::LookupException const&) {
     ROS_WARN("NO TRANSFORM FOUND (Lookup failed)");
     return;
@@ -247,13 +252,13 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
     ROS_WARN("NO TRANSFORM FOUND (ExtrapolationException)");
     return;
   }
-  
-  _human_meas.clear();
-  
+
   //get all human measurment points and transform them to robot coordinate system
   if(msg->humans.size() > 0)
   {
-    const concert_msgs::Human3D &human = msg->humans[0];
+    for (const concert_msgs::Human3D &human: msg->humans){
+      _human_meas.clear();
+      int human_index = human.label_id;
     for(const concert_msgs::Keypoint3D &keypoint:human.keypoints)
     {
       geometry_msgs::PointStamped pointStamped;
@@ -265,16 +270,16 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
       _human_meas.emplace_back(
           reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
       }
+      _shield.humanMeasurement(_human_meas, human_index, msg->header.stamp.toSec());
+    }
   }
-
-  _shield.humanMeasurement(_human_meas, msg->header.stamp.toSec());
 }
 
 
 void SaraShieldXbot2::sendDemoHuman()
 {
   concert_msgs::Human3D human;
-  for(int i = 0; i < 30; i++){
+  for(int i = 0; i < 25; i++){
     concert_msgs::Keypoint3D keyPoint;
     keyPoint.pose.position.x = 10.0;
     keyPoint.pose.position.y = 10.0;

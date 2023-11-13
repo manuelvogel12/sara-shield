@@ -53,7 +53,7 @@ int main () {
     for (int ep=0; ep<1; ep++) {
       for (int i=0; i<10000; i++) {
         t += 0.001;
-        shield.humanMeasurement(dummy_human_meas, t);
+        shield.humanMeasurement(dummy_human_meas, 0, t);
         t += 0.003;
         if (i % 2 == 0) {
             std::vector<double> qpos{0.2*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};

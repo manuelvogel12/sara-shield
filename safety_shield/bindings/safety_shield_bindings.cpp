@@ -101,7 +101,7 @@ PYBIND11_MODULE(safety_shield_py, handle) {
     .def("step", &safety_shield::SafetyShield::step, py::arg("cycle_begin_time"))
     .def("newLongTermTrajectory", &safety_shield::SafetyShield::newLongTermTrajectory, py::arg("goal_position"), py::arg("goal_velocity"))
     .def("setLongTermTrajectory", &safety_shield::SafetyShield::setLongTermTrajectory, py::arg("traj"))
-    .def("humanMeasurement", static_cast<void (safety_shield::SafetyShield::*)(const std::vector<std::vector<double>> human_measurement, double time)>(&safety_shield::SafetyShield::humanMeasurement), py::arg("human_measurement"), py::arg("time"))
+    .def("humanMeasurement", static_cast<void (safety_shield::SafetyShield::*)(const std::vector<std::vector<double>> human_measurement, int human_index, double time)>(&safety_shield::SafetyShield::humanMeasurement), py::arg("human_measurement"), py::arg("human_index"), py::arg("time"))
     .def("getRobotReachCapsules", &safety_shield::SafetyShield::getRobotReachCapsules)
     .def("getHumanReachCapsules", &safety_shield::SafetyShield::getHumanReachCapsules, py::arg("type") = 1)
     .def("getSafety", &safety_shield::SafetyShield::getSafety)

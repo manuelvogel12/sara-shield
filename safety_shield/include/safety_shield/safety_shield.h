@@ -60,7 +60,7 @@ class SafetyShield {
    * @brief Human reachable set calcualtion object
    * 
    */
-  HumanReach* human_reach_;
+  std::vector<HumanReach*> humans_reach_;
 
   /**
    * @brief Verifier object
@@ -380,7 +380,7 @@ protected:
    * @param long_term_trajectory Fixed trajectory to execute (will be overwritten by new intended goals)
    *    This also defines the initial qpos.
    * @param robot_reach Robot reachable set calculation object
-   * @param human_reach Human reachable set calculation object
+   * @param humans_reach Vector of Human reachable set calculation objects
    * @param verify Verification of reachable sets object
    */
   SafetyShield(bool activate_shield,
@@ -394,7 +394,7 @@ protected:
       const std::vector<double> &j_max_path, 
       const LongTermTraj &long_term_trajectory, 
       RobotReach* robot_reach,
-      HumanReach* human_reach,
+      std::vector<HumanReach*> humans_reach,
       Verify* verify);
 
   /**
@@ -412,6 +412,7 @@ protected:
    * @param init_pitch Base pitch
    * @param init_yaw Base yaw
    * @param init_qpos Initial joint position of the robot
+   * @param max_humans_in_scene Specify the maximum number of humans that can be in the scene
    */
   explicit SafetyShield(bool activate_shield,
       double sample_time,
@@ -424,7 +425,8 @@ protected:
       double init_roll, 
       double init_pitch, 
       double init_yaw,
-      const std::vector<double> &init_qpos);
+      const std::vector<double> &init_qpos,
+      int max_humans_in_scene=1);
 
   /**
    * @brief A SafetyShield destructor
@@ -496,10 +498,13 @@ protected:
   /**
    * @brief Receive a new human measurement
    * @param[in] human_measurement A vector of human joint measurements (list of reach_lib::Points)
+   * @param[in] human_index The index of the human, the measurement belongs to 
    * @param[in] time The timestep of the measurement in seconds.
    */
-  inline void humanMeasurement(const std::vector<reach_lib::Point> human_measurement, double time) {
-    human_reach_->measurement(human_measurement, time);
+  inline void humanMeasurement(const std::vector<reach_lib::Point> human_measurement, int human_index, double time) {
+    if(human_index < humans_reach_.size()){
+      humans_reach_[human_index]->measurement(human_measurement, time);
+    }
   }
 
   /**
@@ -507,22 +512,25 @@ protected:
    * 
    */
   inline void noHumanInTheScene() {
-    human_reach_->reset();
+    for(safety_shield::HumanReach* human_reach: humans_reach_){
+        human_reach->reset();
+    }
   }
 
   /**
    * @brief Receive a new human measurement. 
    * Calls humanMeasurement(const std::vector<reach_lib::Point> human_measurement, double time).
    * @param[in] human_measurement A vector of human joint measurements (list of list of doubles [x, y, z])
+   * @param[in] human_index The index of the human, the measurement belongs to 
    * @param[in] time The timestep of the measurement in seconds.
    */
-  inline void humanMeasurement(const std::vector<std::vector<double>> human_measurement, double time) {
+  inline void humanMeasurement(const std::vector<std::vector<double>> human_measurement, int human_index, double time) {
     assert(human_measurement.size() > 0);
     std::vector<reach_lib::Point> converted_vec;
     for(int i = 0; i < human_measurement.size(); i++) {
       converted_vec.push_back(reach_lib::Point(human_measurement[i][0], human_measurement[i][1], human_measurement[i][2]));
     }
-    humanMeasurement(converted_vec, time);
+    humanMeasurement(converted_vec, human_index, time);
   }
 
   /**
