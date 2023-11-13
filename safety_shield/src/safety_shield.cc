@@ -74,7 +74,8 @@ SafetyShield::SafetyShield(bool activate_shield,
       double init_roll, 
       double init_pitch, 
       double init_yaw,
-      const std::vector<double> &init_qpos):
+      const std::vector<double> &init_qpos,
+      int max_humans_in_scene):
     activate_shield_(activate_shield),
     sample_time_(sample_time),
     path_s_(0),
@@ -144,20 +145,13 @@ SafetyShield::SafetyShield(bool activate_shield,
       extremity_length.push_back(extremity["length"].as<double>());
       extremity_thickness.push_back(extremity["thickness"].as<double>());
     }
-    for(int i=0; i<4; i++){ //TODO FIX NUMBER OF HUMANS
-      humans_reach_.push_back(new HumanReach(joint_names.size(),
-        joint_names,
-        body_link_joints, 
-        thickness, 
-        joint_v_max, 
-        joint_a_max,
-        extremity_base_names, 
-        extremity_end_names, 
-        extremity_length,
-        extremity_thickness,
-        measurement_error_pos, 
-        measurement_error_vel, 
-        delay));
+    // Construct Human Reachs
+    for (int i = 0; i < max_humans_in_scene; i++) {
+      humans_reach_.push_back(new HumanReach(
+          joint_names.size(), joint_names, body_link_joints, thickness,
+          joint_v_max, joint_a_max, extremity_base_names, extremity_end_names,
+          extremity_length, extremity_thickness, measurement_error_pos,
+          measurement_error_vel, delay));
     }
     ///////////// Build verifier
     verify_ = new safety_shield::VerifyISO();

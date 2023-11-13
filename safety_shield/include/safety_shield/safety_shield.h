@@ -412,6 +412,7 @@ protected:
    * @param init_pitch Base pitch
    * @param init_yaw Base yaw
    * @param init_qpos Initial joint position of the robot
+   * @param max_humans_in_scene Specify the maximum number of humans that can be in the scene
    */
   explicit SafetyShield(bool activate_shield,
       double sample_time,
@@ -424,7 +425,8 @@ protected:
       double init_roll, 
       double init_pitch, 
       double init_yaw,
-      const std::vector<double> &init_qpos);
+      const std::vector<double> &init_qpos,
+      int max_humans_in_scene=1);
 
   /**
    * @brief A SafetyShield destructor
