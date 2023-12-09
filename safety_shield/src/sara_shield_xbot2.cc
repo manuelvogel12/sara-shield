@@ -22,9 +22,11 @@ bool SaraShieldXbot2::on_initialize()
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &SaraShieldXbot2::modelStatesCallback, this);
     _human_joint_sub = nh.subscribe("/sara_shield/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & SaraShieldXbot2::goalJointPosCallback, this);
-    _safe_flag_sub = nh.subscribe("/sara_shield/safe_flag", 100, & SaraShieldXbot2::safeFlagCallback, this);
+    _force_safe_sub = nh.subscribe("/sara_shield/force_safe", 100, & SaraShieldXbot2::forceSafeCallback, this);
+    _force_unsafe_sub = nh.subscribe("/sara_shield/force_unsafe", 100, & SaraShieldXbot2::forceUnsafeCallback, this);
     _send_dummy_meas_sub = nh.subscribe("/sara_shield/send_dummy_meas", 100, &SaraShieldXbot2::sendDummyMeasFlagCallback, this);
     _humans_in_scene_sub = nh.subscribe("/sara_shield/humans_in_scene", 100, &SaraShieldXbot2::humansInSceneCallback, this);
+
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
     _static_human_pub = nh.advertise<concert_msgs::Humans>("/sara_shield/human_pose_measurement", 100);
@@ -367,10 +369,13 @@ void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& ms
 }
 
 
-void SaraShieldXbot2::safeFlagCallback(const std_msgs::Bool & msg){
-  _shield.setSafeOverride(msg.data);
+void SaraShieldXbot2::forceSafeCallback(const std_msgs::Bool & msg){
+  _shield.setForceSafe(msg.data);
 }
 
+void SaraShieldXbot2::forceUnsafeCallback(const std_msgs::Bool & msg){
+  _shield.setForceUnsafe(msg.data);
+}
 
 void SaraShieldXbot2::sendDummyMeasFlagCallback(const std_msgs::Bool& msg) {
   _send_dummy_measurement_flag = msg.data;

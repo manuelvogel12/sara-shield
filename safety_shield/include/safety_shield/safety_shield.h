@@ -261,7 +261,8 @@ class SafetyShield {
    */
   long_term_planner::LongTermPlanner ltp_;
 
-  bool safe_override_;
+  bool force_safe_;
+  bool force_unsafe_;
 
 protected:
   /**
@@ -572,8 +573,20 @@ protected:
     return is_safe_;
   }
 
-  inline void setSafeOverride(bool value){
-    safe_override_ = value;
+  /**
+   * @brief Force sarashield to be safe (never stop the robot)
+   * @param msg (bool) True: Don't stop the robot when capsules overlap, False: Normal operation
+   */
+  inline void setForceSafe(bool value){
+    force_safe_ = value;
+  }
+
+  /**
+   * @brief Force sarashield to be unsafe (stop the robot)
+   * @param msg (bool) True: Stop the robot immediatly, False: Normal operation
+   */
+  inline void setForceUnsafe(bool value){
+    force_unsafe_ = value;
   }
 };
 } // namespace safety_shield

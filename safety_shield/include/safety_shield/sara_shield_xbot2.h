@@ -144,9 +144,14 @@ private:
     ros::Subscriber _robot_goal_pos_sub;
 
     /**
-     * @brief Ros subscriber to reveice an "safe" or "unsafe" flag.  
+     * @brief Ros subscriber to reveice an "safe" flag
      */
-    ros::Subscriber _safe_flag_sub;
+    ros::Subscriber _force_safe_sub;
+
+    /**
+     * @brief Ros subscriber to reveice an "unsafe" flag.  
+     */
+    ros::Subscriber _force_unsafe_sub;
 
     /**
      * @brief Ros subscriber to send dummy human measurements, when flag is enabled
@@ -239,10 +244,16 @@ private:
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
 
     /**
-     * @brief Send the safe status of sara-shield
-     * @param msg (bool) True: Collision free, False: capsules are overlappign
+     * @brief Force sarashield to be safe (never stop the robot)
+     * @param msg (bool) True: Don't stop the robot when capsules overlap, False: Normal operation
      */
-    void safeFlagCallback(const std_msgs::Bool & msg);
+    void forceSafeCallback(const std_msgs::Bool & msg);
+
+    /**
+     * @brief Force sarashield to be unsafe (stop the robot)
+     * @param msg (bool) True: Stop the robot immediatly, False: Normal operation
+     */
+    void forceUnsafeCallback(const std_msgs::Bool & msg);
 
     /**
      * @brief Set if the dummy human measurement should be sent.

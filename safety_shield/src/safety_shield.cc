@@ -44,7 +44,8 @@ SafetyShield::SafetyShield(bool activate_shield,
   robot_reach_(robot_reach),
   humans_reach_(humans_reach),
   verify_(verify),
-  safe_override_(true)
+  force_safe_(false),
+  force_unsafe_(false)
 {
   sliding_window_k_ = (int) std::floor(max_s_stop_/sample_time_);
   std::vector<double> prev_dq;
@@ -80,7 +81,8 @@ SafetyShield::SafetyShield(bool activate_shield,
     sample_time_(sample_time),
     path_s_(0),
     path_s_discrete_(0),
-    safe_override_(true)
+    force_safe_(false),
+    force_unsafe_(false)
   {
     ///////////// Build robot reach
     YAML::Node robot_config = YAML::LoadFile(robot_config_file);
@@ -591,8 +593,11 @@ Motion SafetyShield::step(double cycle_begin_time) {
     } else {
       is_safe_ = true;
     }
-
-    if(!safe_override_){
+    // Override savety
+    if(force_safe_){
+      is_safe_ = true;
+    }
+    if(force_unsafe_){
       is_safe_ = false;
     }
     // Select the next motion based on the verified safety
