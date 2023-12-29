@@ -29,6 +29,7 @@ bool SaraShieldXbot2::on_initialize()
 
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
+    _robot_current_pos_pub = nh.advertise<std_msgs::Float32MultiArray>("/sara_shield/current_joint_pos", 100);
     _static_human_pub = nh.advertise<concert_msgs::Humans>("/sara_shield/human_pose_measurement", 100);
     _sara_shield_safe_pub = nh.advertise<std_msgs::Bool>("/sara_shield/is_safe", 100);
     
@@ -104,83 +105,71 @@ void SaraShieldXbot2::run()
 {
     _iteration++;
 
+    // publish dummy humans
     if (_send_dummy_measurement_flag) {
       sendDemoHuman();
     }
 
-    // Movement
-    // if (_iteration % 5 == 0) {
-    //     std::vector<double> qpos{0.2*t, -0.1*t, -0.1*t, 0.0, -0.1*t, 0.0, 0.0, -0.1*t, 0.0, 0.0, 0.0, 0.0, std::min(t, 3.1)};
-    //     std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    //     _shield.newLongTermTrajectory(qpos, qvel);
-    // }
+    // check if a new goal pose is set. If so, give a new LongTermTrajectory to sara shield
     if(_new_goal){
       _new_goal = false;
        std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
       _shield.newLongTermTrajectory(_goal_joint_pos, qvel);
     }
-    //if (_iteration % 1000 == 0) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
-    //    //std::vector<double> qpos{0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t, 0.02*t};
-    //    std::vector<double> qpos{1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-    //    std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    //    _shield.newLongTermTrajectory(qpos, qvel);
-    //}
-    //if (_iteration % 10 == 1) {   //Joint order: 0:Unknown 1:J1_EE 2:J2_EE  3:J3_EE  4:J4_EE  5:J5_EE 6: ... 
-    //    std::vector<double> qpos{0.02*t, 0.02*t, -0.02*t, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    //    std::vector<double> qvel{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    //    _shield.newLongTermTrajectory(qpos, qvel);
-    //}
 
     //Perform a sara shield update step
     safety_shield::Motion next_motion = _shield.step(ros::Time::now().toSec());
-    
-    if(!_shield.getSafety()){
-      jerror("NOT SAFE");
-    }
-    //else{
-    //  jwarn("SAFE");
-    //}
-
-    //DEBUG: print the time the update step took
-    //double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
-    //std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
-
-
     std::vector<double> q = next_motion.getAngle();
-    //change size of q to DOF + 8
-    for(int i = q.size(); i< 14; i++)
-    	q.insert(q.begin(), 0);
-
-    //DEBUG: print angles of the robot
-    std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
-    for(double d: q){
-        std::cout<<d<<",";
-    }
-    std::cout<<std::endl;
 
     //transform float array to Eigen Vector
-    //Eigen::VectorXd _q = Eigen::VectorXd::Zero(13);
-    Eigen::Map<Eigen::VectorXd> _q(&q[0], q.size()); 
+    Eigen::Map<Eigen::VectorXd> q_eigen(&q[0], q.size()); 
 
-    // Visualize in every 10th timestep
+    // Move the robot
+    _robot->chain("chain_E").setPositionReference(q_eigen);
+    _robot->move();
+
+
+    // Visualize in every n-th timestep (using Ros visualization markers)
     if (_iteration % 5 == 0) {
       visualizeRobotAndHuman();
     }
-    
-    
-    // Move the robot
-    _robot->setPositionReference(_q);
-    _robot->move();
 
-    //_robot->getPositionReference(_q_obs);
-    //std::cout<<"observed: \n "<<_q_obs<<std::endl;
-    //std::cout<<"safe:" <<_shield.getSafety()<<std::endl;
+    bool debug = true;
+    if(debug && _iteration % 5 == 0) {
+      //print angles of the robot
+      std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
+      for(double d: q){
+          std::cout<<std::fixed<<std::setprecision(3)<<d<<",";
+      }
+      std::cout<<std::endl;
 
-    
+
+      if(!_shield.getSafety()){
+        jerror("NOT SAFE");
+      }
+      //else{
+      //  jwarn("SAFE");
+      //}
+
+      //print the time the update step took
+      //double time_after = std::chrono::duration<double>(std::chrono::system_clock::now()-time_before).count();
+      //std::cout<<"shield step "<<_iteration<<" took:"<<time_after<<" seconds"<<std::endl;
+    }
+
     // Send status bool
     std_msgs::Bool status;
     status.data = _shield.getSafety();
     _sara_shield_safe_pub.publish(status);
+
+    //Send current pos message
+    Eigen::VectorXd qpos_obs_arm_eigen;
+    std_msgs::Float32MultiArray current_state_msg;
+    _robot->sense();
+    _robot->chain("chain_E").getJointPosition(qpos_obs_arm_eigen);
+    std::vector<float> qpos_obs_float_vec(qpos_obs_arm_eigen.data(), 
+                                          qpos_obs_arm_eigen.data()+qpos_obs_arm_eigen.size());
+    current_state_msg.data = qpos_obs_float_vec;
+    _robot_current_pos_pub.publish(current_state_msg);
 
     ros::spinOnce();
 }

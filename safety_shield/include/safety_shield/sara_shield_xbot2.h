@@ -82,14 +82,6 @@ public:
 
 
 private:
-    
-    // Eigen::VectorXd _q_start, _v_start,_v_new,_q_ref,_q_home;
-    
-   /**
-    * @brief DEBUG, vectors to get/set the robot position   
-    * @note mostly for testing, should be replaced by local variables
-    */
-    Eigen::VectorXd _q, _q_obs;
 
     /**
      * @brief the sara shield
@@ -172,6 +164,11 @@ private:
      * @brief Ros publisher to publish robot visualization
      */
     ros::Publisher _robot_marker_pub;
+
+    /**
+     * @brief Ros publisher to publish the current robot joint positions
+     */
+    ros::Publisher _robot_current_pos_pub;
 
     /**
      * @brief Ros publisher to send dummy human measurements
