@@ -20,7 +20,7 @@ bool SaraShieldXbot2::on_initialize()
     // ros: subsribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &SaraShieldXbot2::modelStatesCallback, this);
-    _human_joint_sub = nh.subscribe("/sara_shield/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
+    _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & SaraShieldXbot2::goalJointPosCallback, this);
     _force_safe_sub = nh.subscribe("/sara_shield/force_safe", 100, & SaraShieldXbot2::forceSafeCallback, this);
     _force_unsafe_sub = nh.subscribe("/sara_shield/force_unsafe", 100, & SaraShieldXbot2::forceUnsafeCallback, this);
@@ -137,11 +137,11 @@ void SaraShieldXbot2::run()
     bool debug = true;
     if(debug && _iteration % 5 == 0) {
       //print angles of the robot
-      std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
-      for(double d: q){
-          std::cout<<std::fixed<<std::setprecision(3)<<d<<",";
-      }
-      std::cout<<std::endl;
+      //std::cout<<"q at time t=" << ros::Time::now().toSec() << ": ";
+      //for(double d: q){
+      //    std::cout<<std::fixed<<std::setprecision(3)<<d<<",";
+      //}
+      //std::cout<<std::endl;
 
 
       if(!_shield.getSafety()){
@@ -352,6 +352,7 @@ void SaraShieldXbot2::sendDemoHuman()
 
 void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& msg)
 {
+  std::cout<<"RECEIVE POS"<<std::endl;
   std::vector<double> a(msg.data.begin(), msg.data.end());
   _goal_joint_pos = a;
   _new_goal = true;
