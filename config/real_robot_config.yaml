@@ -30,7 +30,7 @@ xbotcore_plugins:
     ec_ros: {thread: nrt_main, type: ec_ros}
 
     safety_shield:
-      type: testnode
+      type: sara_shield_xbot2
       thread: nrt_saf
       params:
         trajectory_config_file: 
