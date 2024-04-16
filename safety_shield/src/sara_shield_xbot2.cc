@@ -285,14 +285,14 @@ void SaraShieldXbot2::sendDemoHuman()
     human.keypoints[i] = keyPoint;
   }
   // Pelv
-  human.keypoints[0].pose.position.x = 1.0;
-  human.keypoints[0].pose.position.y = 0.0;
-  human.keypoints[0].pose.position.z = 0.3;
+  human.keypoints[24].pose.position.x = 1.0;
+  human.keypoints[24].pose.position.y = 0.0;
+  human.keypoints[24].pose.position.z = 0.3;
 
   // Collar
-  human.keypoints[9].pose.position.x = 1.0;
-  human.keypoints[9].pose.position.y = 0.0;
-  human.keypoints[9].pose.position.z = 0.8;
+  human.keypoints[11].pose.position.x = 1.0;
+  human.keypoints[11].pose.position.y = 0.0;
+  human.keypoints[11].pose.position.z = 0.8;
 
   // Neck
   human.keypoints[12].pose.position.x = 1.0;
@@ -300,35 +300,35 @@ void SaraShieldXbot2::sendDemoHuman()
   human.keypoints[12].pose.position.z = 1.0;
 
   // Head
-  human.keypoints[15].pose.position.x = 1.0;
-  human.keypoints[15].pose.position.y = 0.0;
-  human.keypoints[15].pose.position.z = 1.2;
+  human.keypoints[13].pose.position.x = 1.0;
+  human.keypoints[13].pose.position.y = 0.0;
+  human.keypoints[13].pose.position.z = 1.2;
 
   // Left shoulder
-  human.keypoints[16].pose.position.x = 1.01;
-  human.keypoints[16].pose.position.y = 0.26;
-  human.keypoints[16].pose.position.z = 0.95;
+  human.keypoints[14].pose.position.x = 1.01;
+  human.keypoints[14].pose.position.y = 0.26;
+  human.keypoints[14].pose.position.z = 0.95;
 
   // Right Shoulder
-  human.keypoints[17].pose.position.x = 1.0;
-  human.keypoints[17].pose.position.y = -0.26;
-  human.keypoints[17].pose.position.z = 0.95;
+  human.keypoints[19].pose.position.x = 1.0;
+  human.keypoints[19].pose.position.y = -0.26;
+  human.keypoints[19].pose.position.z = 0.95;
 
 
   // Left elbow
-  human.keypoints[18].pose.position.x = 1.0;
-  human.keypoints[18].pose.position.y = 0.27;
-  human.keypoints[18].pose.position.z = 0.65;
+  human.keypoints[15].pose.position.x = 1.0;
+  human.keypoints[15].pose.position.y = 0.27;
+  human.keypoints[15].pose.position.z = 0.65;
 
   // Right Elbow
-  human.keypoints[19].pose.position.x = 1.0;
-  human.keypoints[19].pose.position.y = -0.27;
-  human.keypoints[19].pose.position.z = 0.65;
+  human.keypoints[20].pose.position.x = 1.0;
+  human.keypoints[20].pose.position.y = -0.27;
+  human.keypoints[20].pose.position.z = 0.65;
 
   // Left Wrist
-  human.keypoints[20].pose.position.x = 1.0;
-  human.keypoints[20].pose.position.y = 0.28;
-  human.keypoints[20].pose.position.z = 0.3;
+  human.keypoints[16].pose.position.x = 1.0;
+  human.keypoints[16].pose.position.y = 0.28;
+  human.keypoints[16].pose.position.z = 0.3;
 
 
   // Right Wrist
@@ -337,14 +337,14 @@ void SaraShieldXbot2::sendDemoHuman()
   human.keypoints[21].pose.position.z = 0.3;
 
   // Left Hand
-  human.keypoints[22].pose.position.x = 1.0;
-  human.keypoints[22].pose.position.y = 0.29;
-  human.keypoints[22].pose.position.z = 0.2;
+  human.keypoints[17].pose.position.x = 1.0;
+  human.keypoints[17].pose.position.y = 0.29;
+  human.keypoints[17].pose.position.z = 0.2;
 
   // Right Hand
-  human.keypoints[23].pose.position.x = 1.0;
-  human.keypoints[23].pose.position.y = -0.29;
-  human.keypoints[23].pose.position.z = 0.2;
+  human.keypoints[22].pose.position.x = 1.0;
+  human.keypoints[22].pose.position.y = -0.29;
+  human.keypoints[22].pose.position.z = 0.2;
 
   concert_msgs::Humans humans;
   humans.humans.push_back(human);
@@ -374,7 +374,7 @@ void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectory&
     const std::vector<double> q = trajectory_point.positions;
     const std::vector<double> dq = trajectory_point.velocities;
     const std::vector<double> ddq = trajectory_point.accelerations;
-    double s = 0.0; // TODO
+    double s = time; // TODO
     
     // create Motion depending on which properties are provided
     if (ddq.size() > 0)
