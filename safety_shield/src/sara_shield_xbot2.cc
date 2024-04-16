@@ -279,15 +279,20 @@ void SaraShieldXbot2::sendDemoHuman()
   concert_msgs::Human3D human;
   for(int i = 0; i < 25; i++){
     concert_msgs::Keypoint3D keyPoint;
-    keyPoint.pose.position.x = 10.0;
-    keyPoint.pose.position.y = 10.0;
-    keyPoint.pose.position.z = 0.3;
+    keyPoint.pose.position.x = 1.0;
+    keyPoint.pose.position.y = 0.0;
+    keyPoint.pose.position.z = 0.2;
     human.keypoints[i] = keyPoint;
   }
   // Pelv
   human.keypoints[0].pose.position.x = 1.0;
   human.keypoints[0].pose.position.y = 0.0;
   human.keypoints[0].pose.position.z = 0.3;
+
+  // Collar
+  human.keypoints[9].pose.position.x = 1.0;
+  human.keypoints[9].pose.position.y = 0.0;
+  human.keypoints[9].pose.position.z = 0.8;
 
   // Neck
   human.keypoints[12].pose.position.x = 1.0;
