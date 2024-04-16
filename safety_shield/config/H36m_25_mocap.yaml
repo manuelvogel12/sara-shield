@@ -7,9 +7,9 @@ delay: 0.0
 joint_names: [
   "rHip", "rKnee", "rAnkle", "rFoot", "rToe",
   "lHip", "lKnee", "lAnkle", "lFoot", "lToe",
-  "spine", "neck", "head", "headTop", "lShldr"
-  "lElbow", "lWrist", "lThumb" , "lHand" "rShldr"
-  "rElbow", "rWrist", "rThumb" , "rHand", "pelvis"
+  "spine", "neck", "head", "headTop", "lShldr",
+  "lElbow", "lWrist", "lThumb", "lHand", "rShldr",
+  "rElbow", "rWrist", "rThumb", "rHand", "pelvis"
 ]
 # Not included anymore ["thor", "lClav", "rClav", "nose"]
 # New joints ["rFoot", "lFoot", "headTop", "neck", "lThumb", "rThumb"]
