@@ -208,16 +208,16 @@ void SaraShieldXbot2::visualizeRobotAndHuman(){
   visualization_msgs::MarkerArray humanMarkerArray = visualization_msgs::MarkerArray();
   visualization_msgs::MarkerArray robotMarkerArray = visualization_msgs::MarkerArray();
 
-  // visualization of robot and human capsules
+  // visualization of the human capsules
   std::vector<std::vector<double>> humanCapsules =_shield.getHumanReachCapsules(1);
   createPoints(humanMarkerArray, 3 * humanCapsules.size(),
                visualization_msgs::Marker::CYLINDER, 2);
   createCapsules(humanMarkerArray, humanCapsules);
 
+  // visualization of the robot capsules
   std::vector<std::vector<double>> robotReachCapsules =_shield.getRobotReachCapsules();
-  
   createPoints(robotMarkerArray, 3 * robotReachCapsules.size(),
-               visualization_msgs::Marker::CYLINDER, 0);
+               visualization_msgs::Marker::CYLINDER, _shield.getSafety()?1:2);
   createCapsules(robotMarkerArray, robotReachCapsules);
 
   _human_marker_pub.publish(humanMarkerArray);
@@ -427,13 +427,13 @@ void SaraShieldXbot2::createPoints(visualization_msgs::MarkerArray& markers, int
     if(color_type == 0) { // ROBOT
       marker.color.r = 0.0f;
       marker.color.g = 1.0f;
-      marker.color.b = 0.0f;
-    }
-    else if (color_type == 1) { // HUMAN_CYLINDER
-      marker.color.r = 0.0f;
-      marker.color.g = 0.0f;
       marker.color.b = 1.0f;
-    } else if (color_type == 2) { //HUMAN_REACH
+    }
+    else if (color_type == 1) { // HUMAN_REACH (safe)
+      marker.color.r = 0.0f;
+      marker.color.g = 1.0f;
+      marker.color.b = 0.0f;
+    } else if (color_type == 2) { //HUMAN_REACH (unsafe)
       marker.color.r = 1.0f;
       marker.color.g = 0.0f;
       marker.color.b = 0.0f;
