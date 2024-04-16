@@ -17,7 +17,7 @@ SaraShieldXbot2::SaraShieldXbot2(const Args& args)
 bool SaraShieldXbot2::on_initialize()
 {
     //init ROS
-    // ros: subsribe to topics and advertise topics
+    // ros: subscribe to topics and advertise topics
     ros::NodeHandle nh;
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &SaraShieldXbot2::modelStatesCallback, this);
     _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
@@ -246,7 +246,7 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
     return;
   }
 
-  //get all human measurment points and transform them to robot coordinate system
+  //get all human measurement points and transform them to the robot coordinate system
   if(msg->humans.size() > 0)
   {
     for (const concert_msgs::Human3D &human: msg->humans){
@@ -309,7 +309,7 @@ void SaraShieldXbot2::sendDemoHuman()
   human.keypoints[16].pose.position.y = 0.26;
   human.keypoints[16].pose.position.z = 0.95;
 
-  // Rigth Shoulder
+  // Right Shoulder
   human.keypoints[17].pose.position.x = 1.0;
   human.keypoints[17].pose.position.y = -0.26;
   human.keypoints[17].pose.position.z = 0.95;

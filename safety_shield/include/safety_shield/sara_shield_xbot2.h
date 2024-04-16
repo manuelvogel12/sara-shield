@@ -122,7 +122,7 @@ private:
     tf2_ros::TransformListener _tfListener;
 
     /**
-     * @brief Ros subsriber to receveive human joint positions
+     * @brief Ros subscriber to receive human joint positions
      */
     ros::Subscriber _human_joint_sub;
     
@@ -132,23 +132,22 @@ private:
     ros::Subscriber _model_state_sub;
     
     /**
-     * @brief Ros subscriber to reveice goal positions for each joint
+     * @brief Ros subscriber to receive goal positions for each joint
      */
     ros::Subscriber _robot_goal_pos_sub;
 
-    
     /**
-     * @brief Ros subscriber to reveice a trajectory
+     * @brief Ros subscriber to receive a trajectory
      */
     ros::Subscriber _robot_trajectory_sub;
 
     /**
-     * @brief Ros subscriber to reveice an "safe" flag
+     * @brief Ros subscriber to receive a "safe" flag
      */
     ros::Subscriber _force_safe_sub;
 
     /**
-     * @brief Ros subscriber to reveice an "unsafe" flag.  
+     * @brief Ros subscriber to receive an "unsafe" flag.  
      */
     ros::Subscriber _force_unsafe_sub;
 
@@ -243,7 +242,7 @@ private:
 
     /**
      * @brief Callback to receive new goal joint positions 
-     * @param msg Float array. Each float represents the joint posiiton for one joint
+     * @param msg Float array. Each float represents the joint position for one joint
      */
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
 
@@ -262,19 +261,19 @@ private:
 
     /**
      * @brief Force sarashield to be unsafe (stop the robot)
-     * @param msg (bool) True: Stop the robot immediatly, False: Normal operation
+     * @param msg (bool) True: Stop the robot immediately, False: Normal operation
      */
     void forceUnsafeCallback(const std_msgs::Bool & msg);
 
     /**
-     * @brief Set if the dummy human measurement should be sent.
+     * @brief Decide whether the dummy human measurement should be sent.
      * 
      * @param msg (bool): True: Send dummy message. False: Don't send.
      */
     void sendDummyMeasFlagCallback(const std_msgs::Bool& msg);
 
     /**
-     * @brief Set if the there can be humans in the scene.
+     * @brief Set to true if there can be humans in the scene.
      * 
      * @param msg (bool): True: There can be humans in the scene. 
      *                    False: There cannot be humans in the scene.
