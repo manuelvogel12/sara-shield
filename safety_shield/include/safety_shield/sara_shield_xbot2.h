@@ -251,7 +251,7 @@ private:
      * @param msg Trajectory consisting of trajectory points, 
      each point has a time and joint-positions and optionally velocities and acclerations 
      */
-    void trajectoryCallback(const trajectory_msgs::JointTrajectory& msg);
+    void trajectoryCallback(const trajectory_msgs::JointTrajectoryConstPtr& msg);
 
     /**
      * @brief Force sarashield to be safe (never stop the robot)

@@ -31,7 +31,7 @@ bool SaraShieldXbot2::on_initialize()
     _human_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/human_joint_marker_array", 100);
     _robot_marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/sara_shield/robot_joint_marker_array", 100);
     _robot_current_pos_pub = nh.advertise<std_msgs::Float32MultiArray>("/sara_shield/current_joint_pos", 100);
-    _static_human_pub = nh.advertise<concert_msgs::Humans>("/sara_shield/human_pose_measurement", 100);
+    _static_human_pub = nh.advertise<concert_msgs::Humans>("/human_pose_measurement", 100);
     _sara_shield_safe_pub = nh.advertise<std_msgs::Bool>("/sara_shield/is_safe", 100);
     
     
@@ -364,23 +364,34 @@ void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& ms
   _new_goal = true;
 }
 
-void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectory& msg)
+void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectoryConstPtr& msg)
 {
   std::cout<<"Trajectory received"<<std::endl;
-  std::vector<safety_shield::Motion> long_term_traj;
-  for(trajectory_msgs::JointTrajectoryPoint trajectory_point: msg.points){
+  std::vector<safety_shield::Motion> long_term_traj = {};
+  std::vector<double> start = msg->points[0].positions;
+  for(double qi:start){
+    std::cout<<qi<<std::endl;
+  }
+  for(trajectory_msgs::JointTrajectoryPoint traj_point: msg->points){
     
-    double time = trajectory_point.time_from_start.toSec();
-    const std::vector<double> q = trajectory_point.positions;
-    const std::vector<double> dq = trajectory_point.velocities;
-    const std::vector<double> ddq = trajectory_point.accelerations;
+    double time = traj_point.time_from_start.toSec();
+    // TODO make it more general (check names of joints or something)
+
+    const std::vector<double> q(traj_point.positions.end() - 6, traj_point.positions.end());
+    const std::vector<double> dq = (traj_point.velocities.size() >= 6) ?
+                                    std::vector<double>(traj_point.velocities.end() - 6, traj_point.velocities.end()) :
+                                    std::vector<double>(traj_point.velocities.begin(), traj_point.velocities.end());
+    const std::vector<double> ddq = (traj_point.accelerations.size() >= 6) ?
+                                  std::vector<double>(traj_point.accelerations.end() - 6, traj_point.accelerations.end()) :
+                                  std::vector<double>(traj_point.accelerations.begin(), traj_point.accelerations.end());
+    
     double s = time; // TODO
     
     // create Motion depending on which properties are provided
-    if (ddq.size() > 0)
+    if (ddq.size() >= 6 && dq.size() >= 6)
     {
       long_term_traj.emplace_back(time, q, dq, ddq, s);  
-    }else if (dq.size() > 0)
+    }else if (traj_point.velocities.size() >= 6)
     {
       long_term_traj.emplace_back(time, q, dq, s);
     }else
@@ -391,7 +402,7 @@ void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectory&
   double sample_time = getPeriodSec();
 
   safety_shield::LongTermTraj traj = safety_shield::LongTermTraj(long_term_traj, sample_time); 
-  _shield.setLongTermTrajectory(traj);
+  //_shield.setLongTermTrajectory(traj);
 }
 
 
