@@ -22,6 +22,7 @@ bool SaraShieldXbot2::on_initialize()
     _model_state_sub = nh.subscribe("/gazebo/model_states", 100, &SaraShieldXbot2::modelStatesCallback, this);
     _human_joint_sub = nh.subscribe("/human_pose_measurement", 100, &SaraShieldXbot2::humanJointCallback, this);
     _robot_goal_pos_sub = nh.subscribe("/sara_shield/goal_joint_pos", 100, & SaraShieldXbot2::goalJointPosCallback, this);
+    _robot_trajectory_sub = nh.subscribe("/sara_shield/trajectory", 100, &SaraShieldXbot2::trajectoryCallback, this);
     _force_safe_sub = nh.subscribe("/sara_shield/force_safe", 100, & SaraShieldXbot2::forceSafeCallback, this);
     _force_unsafe_sub = nh.subscribe("/sara_shield/force_unsafe", 100, & SaraShieldXbot2::forceUnsafeCallback, this);
     _send_dummy_meas_sub = nh.subscribe("/sara_shield/send_dummy_meas", 100, &SaraShieldXbot2::sendDummyMeasFlagCallback, this);
@@ -356,6 +357,36 @@ void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& ms
   std::vector<double> a(msg.data.begin(), msg.data.end());
   _goal_joint_pos = a;
   _new_goal = true;
+}
+
+void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectory& msg)
+{
+  std::cout<<"Trajectory received"<<std::endl;
+  std::vector<safety_shield::Motion> long_term_traj;
+  for(trajectory_msgs::JointTrajectoryPoint trajectory_point: msg.points){
+    
+    double time = trajectory_point.time_from_start.toSec();
+    const std::vector<double> q = trajectory_point.positions;
+    const std::vector<double> dq = trajectory_point.velocities;
+    const std::vector<double> ddq = trajectory_point.accelerations;
+    double s = 0.0; // TODO
+    
+    // create Motion depending on which properties are provided
+    if (ddq.size() > 0)
+    {
+      long_term_traj.emplace_back(time, q, dq, ddq, s);  
+    }else if (dq.size() > 0)
+    {
+      long_term_traj.emplace_back(time, q, dq, s);
+    }else
+    {
+      long_term_traj.emplace_back(time, q, s);
+    }
+  }
+  double sample_time = getPeriodSec();
+
+  safety_shield::LongTermTraj traj = safety_shield::LongTermTraj(long_term_traj, sample_time); 
+  _shield.setLongTermTrajectory(traj);
 }
 
 

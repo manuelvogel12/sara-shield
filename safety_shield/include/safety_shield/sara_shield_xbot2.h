@@ -40,6 +40,7 @@
 #include "std_msgs/Float32MultiArray.h"
 #include "std_msgs/Bool.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "trajectory_msgs/JointTrajectory.h"
 // #include "concert_msgs/PositionsHeadered.h"
 
 #include "concert_msgs/Humans.h"
@@ -134,6 +135,12 @@ private:
      * @brief Ros subscriber to reveice goal positions for each joint
      */
     ros::Subscriber _robot_goal_pos_sub;
+
+    
+    /**
+     * @brief Ros subscriber to reveice a trajectory
+     */
+    ros::Subscriber _robot_trajectory_sub;
 
     /**
      * @brief Ros subscriber to reveice an "safe" flag
@@ -239,6 +246,13 @@ private:
      * @param msg Float array. Each float represents the joint posiiton for one joint
      */
     void goalJointPosCallback(const std_msgs::Float32MultiArray& msg);
+
+    /**
+     * @brief Callback to receive a trajectory 
+     * @param msg Trajectory consisting of trajectory points, 
+     each point has a time and joint-positions and optionally velocities and acclerations 
+     */
+    void trajectoryCallback(const trajectory_msgs::JointTrajectory& msg);
 
     /**
      * @brief Force sarashield to be safe (never stop the robot)

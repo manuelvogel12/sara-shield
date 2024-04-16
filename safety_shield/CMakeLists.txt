@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   gazebo_ros
   concert_msgs
+  trajectory_msgs
 )
 
 
