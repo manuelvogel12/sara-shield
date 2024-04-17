@@ -144,6 +144,16 @@ class LongTermTraj {
   }
 
   /**
+   * @brief Set the current pos to the given s value.
+   *
+   * @param s the time to set the current pos to
+   */
+  inline void setTrajectoryPositionToS(double s) {
+    int desired_index = static_cast<int>(floor(s / sample_time_));
+    current_pos_ = std::max(std::min(desired_index - starting_index_, length_ - 1), 0);
+  }
+
+  /**
    * @brief Get the length of the LTT
    * 
    * @return int length

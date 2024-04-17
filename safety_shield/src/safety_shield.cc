@@ -39,7 +39,6 @@ SafetyShield::SafetyShield(bool activate_shield,
   j_max_ltt_(j_max_path),
   sample_time_(sample_time),
   path_s_(0),
-  path_s_discrete_(0),
   long_term_trajectory_(long_term_trajectory),
   robot_reach_(robot_reach),
   humans_reach_(humans_reach),
@@ -80,7 +79,6 @@ SafetyShield::SafetyShield(bool activate_shield,
     activate_shield_(activate_shield),
     sample_time_(sample_time),
     path_s_(0),
-    path_s_discrete_(0),
     force_safe_(false),
     force_unsafe_(false)
   {
@@ -196,7 +194,6 @@ void SafetyShield::reset(bool activate_shield,
   new_ltt_processed_ = false;
   recovery_path_correct_ = false;
   path_s_ = 0;
-  path_s_discrete_ = 0;
   cycle_begin_time_ = current_time;
   recovery_path_ = Path();
   failsafe_path_ = Path();
@@ -382,12 +379,9 @@ Motion SafetyShield::computesPotentialTrajectory(bool v, const std::vector<doubl
 {
   try {
     // s_int indicates the index of the entire traveled way
-    while (path_s_ >= (path_s_discrete_+1)*sample_time_) {
-      long_term_trajectory_.increasePosition();
-      if (new_ltt_) {
-        new_long_term_trajectory_.increasePosition();
-      }
-      path_s_discrete_++;
+    long_term_trajectory_.setTrajectoryPositionToS(path_s_);
+    if (new_ltt_) {
+      new_long_term_trajectory_.setTrajectoryPositionToS(path_s_);
     }
     //If verified safe, take the recovery path, otherwise, take the failsafe path
     if (v && recovery_path_correct_) {
@@ -671,16 +665,17 @@ void SafetyShield::newLongTermTrajectory(const std::vector<double> &goal_positio
 void SafetyShield::setLongTermTrajectory(LongTermTraj& traj) {
   Motion current_motion = getCurrentMotion();
   // Check if robot is at stop
-  if (!current_motion.isStopped()) {
+  // std::cout<<current_motion.toString()<<std::endl;
+  if (!current_motion.isStopped(0.1)) {
     throw RobotMovementException();
   }
   Motion start = traj.getNextMotionAtIndex(0);
   // Check if traj starts at the same position
-  if (!current_motion.hasSamePos(&start)) {
+  if (!current_motion.hasSamePos(&start, 0.1)) {
     throw TrajectoryException("Given LTT does not start at current robot position.");
   }
   // Check if traj starts at v=0
-  if (!current_motion.hasSameVel(&start)) {
+  if (!current_motion.hasSameVel(&start, 0.1)) {
     std::stringstream ss;
     ss << "Given LTT does not start with velocity 0.0. Start velocity is [";
     for(size_t i = 0; i < start.getVelocity().size(); ++i)
@@ -693,8 +688,8 @@ void SafetyShield::setLongTermTrajectory(LongTermTraj& traj) {
     std::string s = ss.str();
     throw TrajectoryException(s);
   }
-  // Check if traj ends in stop
-  if (!traj.getNextMotionAtIndex(traj.getLength()-1).isStopped()) {
+  // Check if traj ends in stop. A very high value returns the last position of the trajectory.
+  if (!traj.getNextMotionAtIndex(10e+12).isStopped()) {
       throw TrajectoryException("Given LTT does not end in a complete stop of the robot (v = a = j = 0.0)");
   }
   // Replace LTT
@@ -727,7 +722,8 @@ bool SafetyShield::calculateLongTermTrajectory(const std::vector<double>& start_
     new_traj[i] = Motion(new_time, q, dq, ddq, dddq);
     new_time += sample_time_;
   }
-  ltt = LongTermTraj(new_traj, sample_time_, path_s_discrete_, sliding_window_k_);
+  int starting_index = static_cast<int>(std::floor(path_s_ / sample_time_));
+  ltt = LongTermTraj(new_traj, sample_time_, starting_index, sliding_window_k_);
   return true;
 }
 

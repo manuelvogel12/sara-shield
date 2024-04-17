@@ -366,15 +366,15 @@ void SaraShieldXbot2::goalJointPosCallback(const std_msgs::Float32MultiArray& ms
 
 void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectoryConstPtr& msg)
 {
-  std::cout<<"Trajectory received"<<std::endl;
+  std::cout<<"Receive Long Term Trajectory"<<std::endl;
   std::vector<safety_shield::Motion> long_term_traj = {};
-  std::vector<double> start = msg->points[0].positions;
-  for(double qi:start){
-    std::cout<<qi<<std::endl;
-  }
+  double init_time = _shield.getPath_S();
+  double trajectory_sample_time = msg->points[1].time_from_start.toSec() - msg->points[0].time_from_start.toSec();
+  // Debug only!
+  double speed_factor = 1;
+  trajectory_sample_time = trajectory_sample_time / speed_factor;
   for(trajectory_msgs::JointTrajectoryPoint traj_point: msg->points){
-    
-    double time = traj_point.time_from_start.toSec();
+    double time = init_time + traj_point.time_from_start.toSec() / speed_factor;
     // TODO make it more general (check names of joints or something)
 
     const std::vector<double> q(traj_point.positions.end() - 6, traj_point.positions.end());
@@ -385,24 +385,24 @@ void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectoryC
                                   std::vector<double>(traj_point.accelerations.end() - 6, traj_point.accelerations.end()) :
                                   std::vector<double>(traj_point.accelerations.begin(), traj_point.accelerations.end());
     
-    double s = time; // TODO
     
     // create Motion depending on which properties are provided
     if (ddq.size() >= 6 && dq.size() >= 6)
     {
-      long_term_traj.emplace_back(time, q, dq, ddq, s);  
-    }else if (traj_point.velocities.size() >= 6)
+      long_term_traj.emplace_back(time, q, dq, ddq);  
+    }else if (dq.size() >= 6)
     {
-      long_term_traj.emplace_back(time, q, dq, s);
+      long_term_traj.emplace_back(time, q, dq);
     }else
     {
-      long_term_traj.emplace_back(time, q, s);
+      long_term_traj.emplace_back(time, q);
     }
   }
-  double sample_time = getPeriodSec();
-
-  safety_shield::LongTermTraj traj = safety_shield::LongTermTraj(long_term_traj, sample_time); 
-  //_shield.setLongTermTrajectory(traj);
+  int start_index = static_cast<int>(ceil(init_time / trajectory_sample_time));
+  int sliding_window_k = _shield.getSliding_window_k();
+  safety_shield::LongTermTraj traj = safety_shield::LongTermTraj(long_term_traj, trajectory_sample_time, start_index, sliding_window_k);
+  std::cout<<"Set Long Term Trajectory"<<std::endl;
+  _shield.setLongTermTrajectory(traj);
 }
 
 

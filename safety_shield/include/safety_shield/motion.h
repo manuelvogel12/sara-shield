@@ -17,6 +17,7 @@
 #include <vector>
 #include <cmath>
 #include <assert.h>
+#include <string>
 
 #ifndef MOTION_H
 #define MOTION_H
@@ -146,8 +147,8 @@ class Motion {
   inline bool isStopped(double threshold=1e-4) {
     for (int i = 0; i < nb_modules_; i++) {
       if (std::abs(dq_[i]) > threshold ||
-          std::abs(ddq_[i]) > threshold ||
-          std::abs(dddq_[i]) > threshold) {
+          std::abs(ddq_[i]) > threshold){// ||
+          //std::abs(dddq_[i]) > threshold) {
         return false;
       }
     }
@@ -210,6 +211,19 @@ class Motion {
     }
     return true;
   }
+
+  inline std::string toString(){
+    std::string velocities = "Velocities: ";
+    std::string accelerations = "Accelerations: ";
+    std::string jerks = "Jerks: ";
+    for (int i = 0; i < nb_modules_; i++) {
+      velocities = velocities + std::to_string(dq_[i]) + ", ";
+      accelerations = accelerations + std::to_string(ddq_[i]) + ", ";
+      jerks = jerks + std::to_string(dddq_[i]) + ", ";
+    }
+    return "Motion ( " + velocities + "\n   " + accelerations + "\n   " + jerks +")";
+  }
+  
 
   /**
    * @brief Returns the number of modules

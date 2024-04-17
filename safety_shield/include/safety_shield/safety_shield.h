@@ -112,11 +112,6 @@ class SafetyShield {
   double sample_time_;
 
   /**
-   * @brief the number of samples since start
-   */
-  int path_s_discrete_;
-
-  /**
    * @brief Time since start
    */
   double path_s_;
@@ -312,11 +307,6 @@ protected:
    * @return timestep 
    */
   inline double roundToTimestep(double t) { return ceil(t/sample_time_)*sample_time_; }
-
-  /** 
-   * @brief Calculates and returns the current motion
-   */
-  Motion getCurrentMotion();
 
   /**
    * @brief Determines if the current motion is in the acceleration bounds for replanning
@@ -518,6 +508,11 @@ protected:
     }
   }
 
+  /** 
+   * @brief Calculates and returns the current motion
+   */
+  Motion getCurrentMotion();
+
   /**
    * @brief Receive a new human measurement. 
    * Calls humanMeasurement(const std::vector<reach_lib::Point> human_measurement, double time).
@@ -571,6 +566,14 @@ protected:
 
   inline bool getSafety() {
     return is_safe_;
+  }
+
+  inline double getPath_S(){
+    return path_s_;
+  }
+
+  inline int getSliding_window_k(){
+    return sliding_window_k_;
   }
 
   /**
