@@ -675,6 +675,7 @@ void SafetyShield::setLongTermTrajectory(LongTermTraj& traj) {
     throw TrajectoryException("Given LTT does not start at current robot position.");
   }
   // Check if traj starts at v=0
+  std::cout<<current_motion.toString()<<std::endl;
   if (!current_motion.hasSameVel(&start, 0.1)) {
     std::stringstream ss;
     ss << "Given LTT does not start with velocity 0.0. Start velocity is [";
@@ -689,7 +690,7 @@ void SafetyShield::setLongTermTrajectory(LongTermTraj& traj) {
     throw TrajectoryException(s);
   }
   // Check if traj ends in stop. A very high value returns the last position of the trajectory.
-  if (!traj.getNextMotionAtIndex(10e+12).isStopped()) {
+  if (!traj.getNextMotionAtIndex(10e+12).isStopped(0.1)) {
       throw TrajectoryException("Given LTT does not end in a complete stop of the robot (v = a = j = 0.0)");
   }
   // Replace LTT

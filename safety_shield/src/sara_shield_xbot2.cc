@@ -16,6 +16,8 @@ SaraShieldXbot2::SaraShieldXbot2(const Args& args)
 
 bool SaraShieldXbot2::on_initialize()
 {
+
+    std::cout << "new version \n";
     //init ROS
     // ros: subscribe to topics and advertise topics
     ros::NodeHandle nh;
@@ -249,8 +251,9 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
   //get all human measurement points and transform them to the robot coordinate system
   if(msg->humans.size() > 0)
   {
-    for (const concert_msgs::Human3D &human: msg->humans){
-      _human_meas.clear();
+     //for (const concert_msgs::Human3D &human: msg->humans){
+     concert_msgs::Human3D human = msg->humans[0];
+     _human_meas.clear();
       int human_index = human.label_id;
       for(const concert_msgs::Keypoint3D &keypoint:human.keypoints)
       {
@@ -263,13 +266,14 @@ void SaraShieldXbot2::humanJointCallback(const concert_msgs::HumansConstPtr& msg
         _human_meas.emplace_back(
             reach_lib::Point(pointLocal.x, pointLocal.y, pointLocal.z));
       }
-      double messageTime = msg->header.stamp.toSec();
+      double messageTime = msg->header.stamp.toSec() - 0.1;
       if(messageTime == 0.0){
+        ROS_WARN("TIME NOT SET");
         messageTime = ros::Time::now().toSec();
       }
       _shield.humanMeasurement(_human_meas, human_index, messageTime);
 
-    }
+    //}
   }
 }
 
@@ -398,8 +402,10 @@ void SaraShieldXbot2::trajectoryCallback(const trajectory_msgs::JointTrajectoryC
       long_term_traj.emplace_back(time, q);
     }
   }
+
   int start_index = static_cast<int>(ceil(init_time / trajectory_sample_time));
   int sliding_window_k = _shield.getSliding_window_k();
+  std::cout <<"start_index: " << start_index << "trajectory_sample time: " << trajectory_sample_time << "init time: " << init_time <<std::endl;
   safety_shield::LongTermTraj traj = safety_shield::LongTermTraj(long_term_traj, trajectory_sample_time, start_index, sliding_window_k);
   std::cout<<"Set Long Term Trajectory"<<std::endl;
   _shield.setLongTermTrajectory(traj);
